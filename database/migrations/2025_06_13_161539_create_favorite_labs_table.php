@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('favorite_labs', function (Blueprint $table) {
             $table->id();
-            $table->string('user_name',45);
-            $table->string('email',255)->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password',255);
-            $table->rememberToken();
+            $table->unsignedBigInteger('patient_id')->nullable();
+            $table->foreign('patient_id')->references('id')->on('patients');
+            $table->unsignedBigInteger('lab_id');
+            $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('favorite_labs');
     }
 };

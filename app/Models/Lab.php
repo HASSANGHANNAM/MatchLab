@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Models;
+
+use Doctrine\Inflector\Rules\Substitutions;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Lab extends Model
+{
+    use HasFactory;
+    //      use HasFactory, HasApiTokens;
+    protected $table = "labs";
+    protected $fillable = ['lab_name', 'contact_info', 'price_of_global_unit', 'subscriptions_status', 'location_id'];
+    public $timestamps = true;
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+    public function lab_owner()
+    {
+        return $this->hasOne(LabOwner::class);
+    }
+    public function favorite_labs()
+    {
+        return $this->hasMany(FavoriteLab::class);
+    }
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+    public function advertisements()
+    {
+        return $this->hasMany(Advertisement::class);
+    }
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class);
+    }
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+    public function lab_have_analyses()
+    {
+        return $this->hasMany(lab_have_analyses::class);
+    }
+}
