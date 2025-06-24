@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('lab_analyses', function (Blueprint $table) {
             $table->id();
             $table->string('lab_analyses_name');
+            $table->string('discipline');
             $table->float('global_price');
             $table->timestamps();
         });

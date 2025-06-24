@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('phone', 20)->unique();
+            $table->enum('gender', ['male', 'female', 'other']);
+            $table->date('dob');
             $table->string('Health_Problems', 255);
             $table->timestamps();
         });

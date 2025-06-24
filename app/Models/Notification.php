@@ -10,7 +10,7 @@ class Notification extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "notifications";
-    protected $fillable = ['patient_id', 'lab_owner_id', 'super_admin_id', 'message', 'type', 'send_at'];
+    protected $fillable = ['patient_id', 'lab_owner_id', 'message', 'type', 'send_at'];
     public $timestamps = true;
     public function patient()
     {
@@ -20,8 +20,5 @@ class Notification extends Model
     {
         return $this->belongsTo(LabOwner::class);
     }
-    public function superAdmin()
-    {
-        return $this->belongsTo(SuperAdmin::class);
-    }
+   
 }

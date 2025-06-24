@@ -11,7 +11,7 @@ class Lab extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "labs";
-    protected $fillable = ['lab_name', 'contact_info', 'price_of_global_unit', 'subscriptions_status', 'location_id'];
+    protected $fillable = ['lab_name', 'contact_info', 'image_path', 'price_of_global_unit', 'subscriptions_status', 'location_id'];
     public $timestamps = true;
     public function location()
     {
