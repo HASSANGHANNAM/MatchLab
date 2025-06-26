@@ -133,7 +133,7 @@ class UserServices
             $code = 404;
         }
 
-        return ['user' => $user, 'message' => $message, 'code' => $code];
+        return ['user' => $data, 'message' => $message, 'code' => $code];
     }
 
     public function logout()
