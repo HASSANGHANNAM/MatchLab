@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->enum("payment_status", ["paid", "unpaid", "wallet", "cash"]);
+            $table->enum("payment_status", ["paid", "unpaid"]);
             $table->float('total_Price');
             $table->unsignedBigInteger('appointment_id');
             $table->foreign('appointment_id')->references('id')->on('appointments')->onDelete('cascade');

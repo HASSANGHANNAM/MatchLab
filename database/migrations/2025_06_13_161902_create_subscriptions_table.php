@@ -17,7 +17,7 @@ return new class extends Migration
             $table->date('end_subscription');
             $table->unsignedBigInteger('lab_id');
             $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');
-            $table->enum("subscription_status", ["paid", "unpaid", "wallet", "cash"]);
+            $table->enum("subscription_status", ["Active", "Cancelled", "Expired", "Trial"]);
             $table->timestamps();
         });
     }

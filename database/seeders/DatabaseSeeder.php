@@ -24,7 +24,9 @@ class DatabaseSeeder extends Seeder
             RolesPermissionSeeder::class,
             citySeeder::class,
             samplesSeeder::class,
-            labAnalysesSeeder::class
+            labAnalysesSeeder::class,
+            ownerSeeder::class,
+            patientSeeder::class
         ]);
     }
 }

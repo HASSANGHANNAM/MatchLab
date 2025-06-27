@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('lab_analys_id');
             $table->foreign('sample_id')->references('id')->on('samples')->onDelete('cascade');
             $table->unsignedBigInteger('sample_id');
+            $table->unique(['lab_analys_id', 'sample_id']);
             $table->timestamps();
         });
     }

@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('lab_analyses_name');
             $table->string('discipline');
             $table->float('global_price');
+            $table->string('preconditions');
+            $table->unique(['lab_analyses_name', 'discipline']);
             $table->timestamps();
         });
     }

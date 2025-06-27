@@ -10,7 +10,7 @@ class LabAnalysis extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "lab_analyses";
-    protected $fillable = ['lab_analyses_name', 'global_price', 'discipline'];
+    protected $fillable = ['lab_analyses_name', 'global_price', 'discipline', 'preconditions'];
     public $timestamps = true;
     public function lab_have_analyses()
     {

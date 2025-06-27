@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->unique();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->string('phone', 20)->unique();
-            $table->enum('gender', ['male', 'female', 'other']);
+            $table->enum('gender', ['male', 'female']);
             $table->date('dob');
             $table->string('Health_Problems', 255);
             $table->timestamps();

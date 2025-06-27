@@ -91,9 +91,10 @@ class UserServices
                 'image_path' => $image_path ?? null,
                 'price_of_global_unit' => 1,
                 'subscriptions_status' => false,
+                'home_service' => false
             ]);
             $user->LabOwner()->create([
-                'user_id' => $user['lab_name'] ?? null,
+                'user_id' => $user['id'] ?? null,
                 'lab_id' => $lab['id'] ?? null,
             ]);
             event(new Registered($user));
@@ -109,8 +110,6 @@ class UserServices
             return ['user' => $data, 'message' => $message];
         });
     }
-
-
 
     public function login($request)
     {

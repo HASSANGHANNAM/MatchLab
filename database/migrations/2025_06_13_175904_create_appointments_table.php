@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
-            $table->enum("type", ["paid", "unpaid", "wallet", "cash"]);
+            $table->enum("type", ["IN_HOME", "IN_LAB"]);
             $table->unsignedBigInteger('patient_id');
             $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
             $table->unsignedBigInteger('lab_id');
             $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');
             $table->unsignedBigInteger('location_id')->nullable();
             $table->foreign('location_id')->references('id')->on('locations')->onDelete('cascade');
-            $table->enum("status", ["paid", "unpaid", "wallet", "cash"]);
+            $table->enum("status", ["pending", "completed", "accepted",  "cancelled"]);
             $table->dateTime('date_time');
 
             $table->timestamps();
