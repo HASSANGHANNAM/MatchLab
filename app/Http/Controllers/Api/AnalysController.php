@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\addAnalysesToLabRequest;
 use App\Http\Requests\AnalysesSearchRequest;
 use Illuminate\Http\Request;
 use App\Http\Responses\Response;
@@ -22,6 +23,16 @@ class AnalysController extends Controller
     {
         try {
             $data = $this->analysesServices->AnalysesSearchLabOwner($request);
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
+    public function AnalysesSearchLabOwnerNotInLab(AnalysesSearchRequest $request): JsonResponse
+    {
+        try {
+            $data = $this->analysesServices->AnalysesSearchLabOwnerNotInLab($request);
             return Response::success($data['user'], $data['message']);
         } catch (Throwable $th) {
             $message = $th->getMessage();
@@ -52,6 +63,26 @@ class AnalysController extends Controller
     {
         try {
             $data = $this->analysesServices->AnalysesSuperAdminById($id);
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
+    public function addAnalysesToLab(AddAnalysesToLabRequest $request): JsonResponse
+    {
+        try {
+            $data = $this->analysesServices->addAnalysesToLab($request);
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
+    public function deleteAnalysLabOwner($id): JsonResponse
+    {
+        try {
+            $data = $this->analysesServices->deleteAnalysLabOwner($id);
             return Response::success($data['user'], $data['message']);
         } catch (Throwable $th) {
             $message = $th->getMessage();
