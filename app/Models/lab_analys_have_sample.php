@@ -16,4 +16,13 @@ class lab_analys_have_sample extends Model
     // {
     //     return $this->belongsTo(Appointment::class);
     // }
+    public function analysis()
+    {
+        return $this->belongsTo(LabAnalysis::class, 'lab_analys_id');
+    }
+
+    public function sample()
+    {
+        return $this->belongsTo(Sample::class);
+    }
 }

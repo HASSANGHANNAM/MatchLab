@@ -16,4 +16,9 @@ class Sample extends Model
     // {
     //     return $this->belongsTo(Appointment::class);
     // }
+
+    public function analyses()
+    {
+        return $this->belongsToMany(LabAnalysis::class, 'lab_analys_have_samples', 'sample_id', 'lab_analys_id');
+    }
 }

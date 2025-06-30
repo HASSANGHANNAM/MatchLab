@@ -21,9 +21,19 @@ class Lab extends Model
     {
         return $this->hasOne(LabOwner::class);
     }
+    public function favoritedByPatients()
+    {
+        return $this->belongsToMany(Patient::class, 'favorite_labs', 'lab_id', 'patient_id');
+    }
     public function favorite_labs()
     {
         return $this->hasMany(FavoriteLab::class);
+    }
+    public function isFavorite($patientId)
+    {
+        return $this->favorite_labs()
+            ->where('patient_id', $patientId)
+            ->exists();
     }
     public function subscriptions()
     {
@@ -48,5 +58,13 @@ class Lab extends Model
     public function lab_have_analyses()
     {
         return $this->hasMany(lab_have_analyses::class);
+    }
+    // public function analyses()
+    // {
+    //     return $this->belongsToMany(LabAnalysis::class, 'lab_have_analyses', 'lab_id', 'lab_analys_id');
+    // }
+    public function analyses()
+    {
+        return $this->belongsToMany(LabAnalysis::class, 'lab_have_analyses', 'lab_id', 'lab_analys_id');
     }
 }

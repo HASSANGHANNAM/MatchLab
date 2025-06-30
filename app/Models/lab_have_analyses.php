@@ -18,6 +18,11 @@ class lab_have_analyses extends Model
     }
     public function labAnalysis()
     {
-        return $this->belongsTo(LabAnalysis::class);
+        return $this->belongsTo(LabAnalysis::class, 'lab_analys_id');
+    }
+
+    public function analysis()
+    {
+        return $this->belongsTo(LabAnalysis::class, 'lab_analys_id');
     }
 }

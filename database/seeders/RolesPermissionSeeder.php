@@ -54,8 +54,8 @@ class RolesPermissionSeeder extends Seeder
 
         // $patientUser =  User::factory()->create([
         //     'first_name' => 'patient',
-        //     'last_name' => 'patient',
-        //     'email' => 'patient@example.com',
+        //     'last_name' => '2',
+        //     'email' => 'patient@gmail.com',
         //     'password' => bcrypt('patient123'),
         // ]);
 
