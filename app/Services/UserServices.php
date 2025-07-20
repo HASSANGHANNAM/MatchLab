@@ -97,7 +97,7 @@ class UserServices
                 'user_id' => $user['id'] ?? null,
                 'lab_id' => $lab['id'] ?? null,
             ]);
-            event(new Registered($user));
+            // event(new Registered($user));
 
             $user->load('roles', 'permissions');
             $user = User::query()->find($user->id);

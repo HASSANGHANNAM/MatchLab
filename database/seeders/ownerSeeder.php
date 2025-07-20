@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -92,60 +93,32 @@ class ownerSeeder extends Seeder
                 'image_path' => $ow['image_path'],
                 'price_of_global_unit' =>  $ow['price_of_global_unit'],
                 'subscriptions_status' =>  $ow['subscriptions_status'],
-                'home_service' =>  $ow['home_service']
+                'home_service' =>  $ow['home_service'],
             ]);
             $user->LabOwner()->create([
                 'user_id' => $user['id'],
                 'lab_id' => $lab['id'],
             ]);
-
-
-
-
             // event(new Registered($user));
 
 
-
-
-            $cancellableStatuses = ['Expired', 'Trial', 'Active'];
-            $checkActive = false;
-            for ($i = 0; $i < 5; $i++) {
-                $start = Carbon::today()->subDays(rand(0, 60));
-                $duration = [7, 30, 365][rand(0, 2)];
-                $end = $start->copy()->addDays($duration);
-
-
-                if ($end->lt(now())) {
-                    $baseStatus = 'Expired';
-                } elseif ($duration == 7) {
-                    $baseStatus = 'Trial';
-                } else {
-                    $baseStatus = 'Active';
-                }
-
-                $status = (rand(1, 100) <= 40)
-                    ? 'Cancelled'
-                    : $baseStatus;
-
-                if ($status === 'Cancelled' && $end->lt(now())) {
-                    $status = 'Expired';
-                }
-                if ($checkActive == true && $status == "Active")
-                    continue;
-                if ($status == "Active")
-                    $checkActive = true;
-                Subscription::create([
-                    'start_subscription' => $start,
-                    'end_subscription' => $end,
-                    'lab_id' => $lab['id'],
-                    'subscription_status' => $status,
-                ]);
+            $start = Carbon::today()->subDays(rand(0, 60));
+            $duration = [7, 30, 365][rand(0, 2)];
+            $end = $start->copy()->addDays($duration);
+            $status = false;
+            if (!$end->lt(now())) {
+                $status = true;
             }
-
-
-
-
-
+            DB::table('labs')->where(
+                [
+                    ['id', '=',  $lab['id']]
+                ]
+            )->update(
+                [
+                    'subscriptions_status' => $status,
+                    'expiry_time' => $end
+                ]
+            );
 
 
 
@@ -163,11 +136,6 @@ class ownerSeeder extends Seeder
                     'descriptions' => $description,
                 ]);
             }
-
-
-
-
-
 
 
             $analyses = LabAnalysis::all();

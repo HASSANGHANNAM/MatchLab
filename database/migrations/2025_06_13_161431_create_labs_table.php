@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('image_path');
             $table->float('price_of_global_unit');
             $table->boolean('subscriptions_status');
+            $table->date('expiry_time')->nullable();
             $table->boolean('home_service');
             // $table->unsignedBigInteger('lab_owner_id');
             // $table->foreign('lab_owner_id')->references('id')->on('lab_owners')->onDelete('cascade');

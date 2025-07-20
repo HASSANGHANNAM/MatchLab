@@ -10,12 +10,13 @@ class Evaluation extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "evaluations";
-    protected $fillable = ['rate', 'patient_id', 'lab_id'];
+    protected $fillable = ['rate', 'review', 'patient_id', 'lab_id'];
     public $timestamps = true;
     public function patient()
     {
         return $this->belongsTo(Patient::class);
     }
+
     public function lab()
     {
         return $this->belongsTo(Lab::class);

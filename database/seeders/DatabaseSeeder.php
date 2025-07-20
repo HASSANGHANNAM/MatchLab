@@ -26,7 +26,8 @@ class DatabaseSeeder extends Seeder
             samplesSeeder::class,
             labAnalysesSeeder::class,
             ownerSeeder::class,
-            patientSeeder::class
+            patientSeeder::class,
+            planSeeder::class
         ]);
     }
 }

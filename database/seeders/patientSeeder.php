@@ -90,21 +90,13 @@ class patientSeeder extends Seeder
             ]);
             // event(new Registered($user));
 
-
-
-
-
             $patientId = Patient::query()->where('user_id', $user['id'])->value('id');
             foreach ($labs as $lab) {
-                Comment::create([
-                    'comment' => $ratings[array_rand($ratings)],
-                    'patient_id' => $patientId,
-                    'lab_id' => $lab['id']
-                ]);
                 Evaluation::create([
                     'patient_id' => $patientId,
                     'lab_id' => $lab['id'],
-                    'rate' =>  mt_rand(0, 10) * 0.5
+                    'rate' =>  mt_rand(0, 10) * 0.5,
+                    'review' => $ratings[array_rand($ratings)],
                 ]);
             }
 

@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('evaluations', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->float('rate')->unsigned();
+            $table->float('rate')->unsigned()->nullable();
+            $table->string('review')->nullable();
             $table->unsignedBigInteger('patient_id');
             $table->foreign('patient_id')->references('id')->on('patients');
             $table->unsignedBigInteger('lab_id');

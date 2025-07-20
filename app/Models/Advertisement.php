@@ -12,8 +12,12 @@ class Advertisement extends Model
     protected $table = "advertisements";
     protected $fillable = ['lab_id', 'title', 'descriptions'];
     public $timestamps = true;
-    public function lab()
+    public function lab2()
     {
         return $this->belongsTo(Lab::class);
+    }
+    public function lab()
+    {
+        return $this->belongsTo(Lab::class, 'lab_id');
     }
 }

@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\Api\AdvertisementController;
 use App\Http\Controllers\Api\AnalysController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\LabController;
 use App\Http\Controllers\Api\SampleController;
+use App\Http\Controllers\Api\SubscriptionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -12,6 +15,7 @@ use App\Models\User;
 use App\Http\Responses\Response;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Middleware\VerifiedEmail;
+use App\Models\Advertisement;
 use Illuminate\Auth\Events\verified;
 
 
@@ -62,4 +66,16 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/AnalysesSuperAdminById/{id}', [AnalysController::class, 'AnalysesSuperAdminById']);
     Route::post('/addAnalysesToLab', [AnalysController::class, 'addAnalysesToLab']);
     Route::delete('/deleteAnalysLabOwner/{id}', [AnalysController::class, 'deleteAnalysLabOwner']);
+    Route::post('/AddAdvertisement', [AdvertisementController::class, 'AddAdvertisement']);
+    Route::post('/deleteAdvertisement/{id}', [AdvertisementController::class, 'deleteAdvertisement']);
+    Route::get('/advertisementSearch', [AdvertisementController::class, 'advertisementSearch']);
+    Route::put('/advertisementUpdate/{id}', [AdvertisementController::class, 'advertisementUpdate']);
+    Route::post('/patientPutUpdateRateReveiw', [EvaluationController::class, 'patientPutUpdateRateReveiw']);
+    Route::delete('/deleteReview/{id}', [EvaluationController::class, 'deleteReview']);
+    Route::delete('/deleteRate/{id}', [EvaluationController::class, 'deleteRate']);
+    Route::get('/allEvaluation/{id}', [EvaluationController::class, 'allEvaluation']);
+    Route::get('/allEvaluationInmylab', [EvaluationController::class, 'allEvaluationInmylab']);
+    Route::post('/addPlan', [SubscriptionController::class, 'addPlan']);
+    Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
+    Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
 });
