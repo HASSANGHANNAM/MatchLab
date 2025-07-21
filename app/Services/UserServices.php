@@ -106,6 +106,7 @@ class UserServices
             $user['token'] = $user->createToken("token")->plainTextToken;
 
             $data['token'] = $user['token'];
+            $data['roles'] = $user['roles'];
             $message = 'OwnerLab user created successfully!';
             return ['user' => $data, 'message' => $message];
         });
@@ -123,6 +124,7 @@ class UserServices
                 $user = $this->appendRolesAndPermissions($user);
                 $user['token'] = $user->createToken("token")->plainTextToken;
                 $data['token'] = $user['token'];
+                $data['roles'] = $user['roles'];
                 $message = 'User login successfully';
                 $code = 200;
             }
