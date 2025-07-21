@@ -107,7 +107,7 @@ class LabServices
                         $query->select('id', 'city_name');
                     }
                 ])
-                ->select('id', 'lab_name', 'image_path', 'subscriptions_status', 'location_id')
+                ->select('id', 'lab_name', 'image_path', 'subscriptions_status', 'expiry_time', 'location_id')
                 ->get()
                 ->each(function ($lab) {
                     $lab->makeHidden(['location_id']);
@@ -150,7 +150,7 @@ class LabServices
                                 ->groupBy('lab_id');
                         }
                     ])
-                    ->select('id', 'lab_name', 'image_path', 'subscriptions_status', 'location_id')
+                    ->select('id', 'lab_name', 'image_path', 'contact_info', 'subscriptions_status', 'expiry_time', 'home_service', 'location_id')
                     ->where('id', $id)
                     ->first();
                 if ($lab) {
@@ -189,7 +189,7 @@ class LabServices
                                 ->groupBy('lab_id');
                         }
                     ])
-                    ->select('id', 'lab_name', 'image_path', 'subscriptions_status', 'location_id', 'price_of_global_unit')
+                    ->select('id', 'lab_name', 'image_path', 'contact_info', 'subscriptions_status', 'location_id', 'price_of_global_unit')
                     ->where('id', $id)
                     ->first();
                 if ($lab) {

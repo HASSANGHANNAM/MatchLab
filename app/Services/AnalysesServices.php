@@ -188,7 +188,7 @@ class AnalysesServices
                 $message = 'successfully!';
             } else {
                 $data = null;
-                $message = 'analys not found in your lab!';
+                $message = 'analys not found !';
             }
         } else {
             $message = 'Unauthorized access!';
