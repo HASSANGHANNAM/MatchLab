@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\CorsMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -15,8 +16,9 @@ class Kernel extends HttpKernel
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
-        \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\TrustProxies::class,
+        CorsMiddleware::class,
+        \Illuminate\Http\Middleware\HandleCors::class,
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
@@ -31,7 +33,6 @@ class Kernel extends HttpKernel
     protected $middlewareGroups = [
         'web' => [
             \Illuminate\Http\Middleware\HandleCors::class,
-            \App\Http\Middleware\Cors::class, // أضف هذا السطر أولاً
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
@@ -42,8 +43,6 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            \Illuminate\Http\Middleware\HandleCors::class,
-            \App\Http\Middleware\Cors::class, // أضف هذا السطر أولاً
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -70,6 +69,5 @@ class Kernel extends HttpKernel
         'signed' => \App\Http\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
-        'cors' => \Illuminate\Http\Middleware\HandleCors::class
     ];
 }

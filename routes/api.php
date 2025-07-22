@@ -1,10 +1,5 @@
 <?php
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
-header('Access-Control-Allow-Credentials: true');
-
 use App\Http\Controllers\Api\AdvertisementController;
 use App\Http\Controllers\Api\AnalysController;
 use App\Http\Controllers\Api\AuthController;
@@ -22,12 +17,6 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Middleware\VerifiedEmail;
 use App\Models\Advertisement;
 use Illuminate\Auth\Events\verified;
-
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    header('HTTP/1.1 204 No Content');
-    header('Access-Control-Max-Age: 86400'); // تخزين لمدة 24 ساعة
-    exit;
-}
 
 // when clicking on verefication link
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
@@ -48,10 +37,11 @@ Route::post('/email/verification-notification', function (Request $request) {
     return Response::Success(true, 'Verification link sent!');
 })->middleware(['auth:sanctum', 'throttle:6,1'])->name('verification.send');
 
-
-Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
-Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::group(['middleware' => ['CorsMiddleware']], function () {
+    Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
+    Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function () {
 
@@ -59,7 +49,7 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::get('/logout', [AuthController::class, 'logout']);
 });
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'CorsMiddleware']], function () {
     Route::get('/citySearch', [CityController::class, 'citySearch']);
     Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
     Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
