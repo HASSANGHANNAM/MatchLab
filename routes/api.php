@@ -52,7 +52,7 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::get('/logout', [AuthController::class, 'logout']);
 });
 
-Route::group(['middleware' => ['auth:sanctum']], function () {
+Route::group(['middleware' => ['auth:sanctum', 'cors']], function () {
     Route::get('/citySearch', [CityController::class, 'citySearch']);
     Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
     Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
