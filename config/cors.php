@@ -42,6 +42,7 @@ return [
         'model/gltf-binary',
         'application/json',
         'text/html',
+        '*'
     ],
 
 ];
