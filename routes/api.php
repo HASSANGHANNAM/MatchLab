@@ -1,5 +1,10 @@
 <?php
 
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Credentials: true');
+
 use App\Http\Controllers\Api\AdvertisementController;
 use App\Http\Controllers\Api\AnalysController;
 use App\Http\Controllers\Api\AuthController;
@@ -18,9 +23,11 @@ use App\Http\Middleware\VerifiedEmail;
 use App\Models\Advertisement;
 use Illuminate\Auth\Events\verified;
 
-
-
-
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    header('HTTP/1.1 204 No Content');
+    header('Access-Control-Max-Age: 86400'); // تخزين لمدة 24 ساعة
+    exit;
+}
 
 // when clicking on verefication link
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
@@ -52,7 +59,7 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::get('/logout', [AuthController::class, 'logout']);
 });
 
-Route::group(['middleware' => ['auth:sanctum', 'cors']], function () {
+Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/citySearch', [CityController::class, 'citySearch']);
     Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
     Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
