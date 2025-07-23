@@ -37,19 +37,19 @@ Route::post('/email/verification-notification', function (Request $request) {
     return Response::Success(true, 'Verification link sent!');
 })->middleware(['auth:sanctum', 'throttle:6,1'])->name('verification.send');
 
-Route::group(['middleware' => ['CorsMiddleware']], function () {
-    Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
-    Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
-    Route::post('/login', [AuthController::class, 'login']);
-});
+// Route::group(['middleware' => ['CorsMiddleware']], function () {
+Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
+Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
+Route::post('/login', [AuthController::class, 'login']);
+// });
 
 Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function () {
 
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/logout', [AuthController::class, 'logout']);
 });
-
-Route::group(['middleware' => ['auth:sanctum', 'CorsMiddleware']], function () {
+// 'CorsMiddleware'
+Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/citySearch', [CityController::class, 'citySearch']);
     Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
     Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
