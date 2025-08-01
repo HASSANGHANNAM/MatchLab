@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Lab;
 use App\Models\lab_have_analyses;
+use App\Services\NotificationService;
 use App\Models\LabAnalysis;
 use App\Models\Sample;
 use App\Models\User;
@@ -212,6 +213,13 @@ class AnalysesServices
                         'lab_analys_id' => $analysisId
                     ]);
                 }
+                $notificationService = new NotificationService();
+                $notificationService->send(
+                    Auth::user(),
+                    "اضافة تحليل",
+                    "تم اضافة تحليل بنجاح "
+                );
+
                 $message = 'Success add analyses to your Lab!';
             } else {
                 $message = 'Unauthorized access!';
@@ -230,6 +238,12 @@ class AnalysesServices
                     ['lab_id', '=', $labId]
                 ]
             )->delete();
+                $notificationService = new NotificationService();
+                $notificationService->send(
+                    Auth::user(),
+                    "حذف التحليل ",
+                    "تم حذف التحليل بنجاح "
+                );
             $message = "Success delete Analys from your lab";
             $code = 200;
         } else {

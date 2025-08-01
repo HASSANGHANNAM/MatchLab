@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\LabController;
 use App\Http\Controllers\Api\SampleController;
+use App\Services\NotificationService;
 use App\Http\Controllers\Api\SubscriptionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -47,7 +48,34 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
 
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/logout', [AuthController::class, 'logout']);
+    Route::post('/updatePatient', [AuthController::class, 'updatePatient']);
+    Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
 });
+
+
+Route::post('/test-notification', function (Request $request) {
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !$user->fcm_token) {
+        return response()->json([
+            'status' => 0,
+            'message' => 'User not found or FCM token is missing'
+        ], 404);
+    }
+
+    $title = $request->title ?? 'Test Notification';
+    $body = $request->body ?? 'This is a manual test notification';
+
+    $notificationService = new NotificationService();
+    $result = $notificationService->send($user, $title, $body);
+
+    return response()->json([
+        'status' => 1,
+        'message' => 'Notification sent',
+        'notification' => $result
+    ]);
+});
+
 // 'CorsMiddleware'
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/citySearch', [CityController::class, 'citySearch']);

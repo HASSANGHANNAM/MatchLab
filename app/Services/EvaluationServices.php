@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Evaluation;
 use App\Models\Lab;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -31,6 +32,12 @@ class EvaluationServices
                         "rate" => $request['rate'],
                         "review" => $request['review'],
                     ]);
+                    $notificationService = new NotificationService();
+                    $notificationService->send(
+                        Auth::user(),
+                        "إضافة تقييم",
+                        "تم اضافة تقييمك بنجاح "
+                    );
                     $message = "Success add your Evaluation";
                     $code = 200;
                 } else {
@@ -78,6 +85,13 @@ class EvaluationServices
                             ['patient_id', '=', $patient->id]
                         ]
                     )->delete();
+
+                    $notificationService = new NotificationService();
+                    $notificationService->send(
+                        Auth::user(),
+                        "حذف تقييم",
+                        "تم حذف تقييمك بنجاح "
+                    );
                 $message = "Success delete your review";
             } else
                 $message = "The review not found in your reviews";
@@ -113,6 +127,12 @@ class EvaluationServices
                             ['patient_id', '=', $patient->id]
                         ]
                     )->delete();
+                    $notificationService = new NotificationService();
+                    $notificationService->send(
+                        Auth::user(),
+                        "حذف تقييم",
+                        "تم حذف تقييمك بنجاح "
+                    );
                 $message = "Success delete your rate";
             } else
                 $message = "The review not found in your rates";

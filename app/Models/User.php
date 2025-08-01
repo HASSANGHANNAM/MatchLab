@@ -24,6 +24,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'password',
+        'fcm_token',
     ];
 
     /**
@@ -50,7 +51,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(Patient::class);
     }
-    
+
 
     public function labOwner()
     {

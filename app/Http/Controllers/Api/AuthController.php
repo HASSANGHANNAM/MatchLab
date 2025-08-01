@@ -75,4 +75,28 @@ class AuthController extends Controller
     {
         return Response::Success($this->userServices->details(), 'user info successfully');
     }
+
+        public function updatePatient(UserSinupRequest $request): JsonResponse
+    {
+        try {
+            $data = $this->userServices->updatePatient($request->validated());
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
+
+            public function updateLabOwner(UserSinupLabOwnerRequest $request): JsonResponse
+    {
+        try {
+            $data = $this->userServices->updateLabOwner($request->validated());
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
+
 }
+

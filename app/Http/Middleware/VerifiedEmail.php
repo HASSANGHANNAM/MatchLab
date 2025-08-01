@@ -20,7 +20,7 @@ class VerifiedEmail
         if(! $request->user() ||
         ($request->user() instanceof MustVerifyEmail &&
         !$request->user()->hasVerifiedEmail())){
-            return Response::Error(false,'your email address is not verified');
+            // return Response::Error(false,'your email address is not verified');
         }
         return $next($request);
     }

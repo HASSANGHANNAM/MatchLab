@@ -39,6 +39,7 @@ class UserSinupRequest extends FormRequest
             'dob' => 'required|date',
             // 'location' => 'required|string',
             'Health_Problems' => 'string',
+            'fcm_token'=> 'string',
         ];
     }
     protected function failedValidation(Validator $validator)
