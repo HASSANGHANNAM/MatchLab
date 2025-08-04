@@ -10,7 +10,7 @@ class Appointment extends Model
     use HasFactory;
     //  use HasFactory, HasApiTokens;
     protected $table = "appointments";
-    protected $fillable = ['type', 'patient_id', 'lab_id', 'location_id', 'status', 'date_time'];
+    protected $fillable = ['type','patient_name','patient_phone','patient_id_number','patient_id', 'lab_id', 'location_id', 'status', 'date_time'];
     public $timestamps = true;
     public function patient()
     {

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\LabController;
 use App\Http\Controllers\Api\SampleController;
+use App\Http\Controllers\Api\LabSchedulController;
 use App\Services\NotificationService;
 use App\Http\Controllers\Api\SubscriptionController;
 use Illuminate\Http\Request;
@@ -52,30 +53,6 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
 });
 
-
-Route::post('/test-notification', function (Request $request) {
-    $user = User::where('email', $request->email)->first();
-
-    if (!$user || !$user->fcm_token) {
-        return response()->json([
-            'status' => 0,
-            'message' => 'User not found or FCM token is missing'
-        ], 404);
-    }
-
-    $title = $request->title ?? 'Test Notification';
-    $body = $request->body ?? 'This is a manual test notification';
-
-    $notificationService = new NotificationService();
-    $result = $notificationService->send($user, $title, $body);
-
-    return response()->json([
-        'status' => 1,
-        'message' => 'Notification sent',
-        'notification' => $result
-    ]);
-});
-
 // 'CorsMiddleware'
 Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/citySearch', [CityController::class, 'citySearch']);
@@ -103,4 +80,14 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/addPlan', [SubscriptionController::class, 'addPlan']);
     Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
     Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
+    Route::post('/labs/{lab}/schedules', [LabSchedulController::class, 'setLabSchedules']);
+    Route::get('/labs/{lab}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
+    Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
+    Route::get('/allappointments/{lab}', [LabSchedulController::class, 'getLabAppointments']);
+    Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
+
+
+
+
+
 });

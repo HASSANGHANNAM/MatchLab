@@ -14,13 +14,19 @@ return new class extends Migration
         Schema::create('appointments', function (Blueprint $table) {
             $table->id();
             $table->enum("type", ["IN_HOME", "IN_LAB"]);
+            $table->string('patient_name');
+            $table->string('patient_phone');
+            $table->string('patient_id_number');
+
             $table->unsignedBigInteger('patient_id');
             $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
+
             $table->unsignedBigInteger('lab_id');
             $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');
+
             $table->unsignedBigInteger('location_id')->nullable();
             $table->foreign('location_id')->references('id')->on('locations')->onDelete('cascade');
-            $table->enum("status", ["pending", "completed", "accepted",  "cancelled"]);
+            $table->enum("status", ["pending", "completed", "accepted",  "cancelled"])->nullable();
             $table->dateTime('date_time');
 
             $table->timestamps();

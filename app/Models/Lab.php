@@ -67,4 +67,9 @@ class Lab extends Model
     {
         return $this->belongsTo(Subscription::class);
     }
+        public function workingHours()
+    {
+        return $this->hasMany(LabWorkingHour::class);
+    }
+
 }
