@@ -22,7 +22,6 @@ class UserServices
 
         return DB::transaction(function () use ($request) {
             $user = User::query()->create([
-                // 'name' => $request['name'],
                 'first_name' => $request['first_name'],
                 'last_name' => $request['last_name'],
                 'email' => $request['email'],
@@ -72,7 +71,6 @@ class UserServices
     {
         return DB::transaction(function () use ($request) {
             $user = User::query()->create([
-                // 'name' => $request['name'],
                 'first_name' => $request['first_name'],
                 'last_name' => $request['last_name'],
                 'email' => $request['email'],
@@ -276,6 +274,46 @@ public function updateLabOwner($request): array
         return ['user' => $user, 'message' => $message, 'code' => $code];
     });
 }
+        public function getOwnerLabInfo($ownerId): array
+    {
+        return DB::transaction(function () use ($ownerId) {
+
+            $user = User::query()
+                ->with([
+                    'LabOwner.lab.location.city',
+                ])
+                ->whereHas('LabOwner')
+                ->findOrFail($ownerId);
+
+            $lab = $user->LabOwner->lab ?? null;
+
+            $data = [
+                'user' => [
+                    'id'         => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name'  => $user->last_name,
+                    'email'      => $user->email,
+                ],
+                'lab' => [
+                    'lab_name'            => $lab->lab_name ?? null,
+                    'contact_info'        => $lab->contact_info ?? null,
+                    'image_path'          => $lab->image_path ?? null,
+                    'price_of_global_unit'=> $lab->price_of_global_unit ?? null,
+                    'subscriptions_status'=> $lab->subscriptions_status ?? null,
+                    'home_service'        => $lab->home_service ?? null,
+                    'location' => [
+                        'address' => $lab->location->address ?? null,
+                        'city'    => $lab->location->city->name ?? null,
+                    ],
+                ]
+            ];
+
+            $message = 'OwnerLab data retrieved successfully!';
+            return ['data' => $data, 'message' => $message];
+        });
+    }
+
+
 
     private function appendRolesAndPermissions($user)
     {

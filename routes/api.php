@@ -51,6 +51,8 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::post('/updatePatient', [AuthController::class, 'updatePatient']);
     Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
+    Route::get('/getOwnerLabInfo/{ownerId}', [AuthController::class, 'getOwnerLabInfo']);
+
 });
 
 // 'CorsMiddleware'
