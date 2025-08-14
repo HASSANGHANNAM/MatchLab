@@ -274,16 +274,18 @@ public function updateLabOwner($request): array
         return ['user' => $user, 'message' => $message, 'code' => $code];
     });
 }
-        public function getOwnerLabInfo($ownerId): array
+        public function getOwnerLabInfo(): array
     {
-        return DB::transaction(function () use ($ownerId) {
+        return DB::transaction(function () {
 
-            $user = User::query()
-                ->with([
-                    'LabOwner.lab.location.city',
-                ])
-                ->whereHas('LabOwner')
-                ->findOrFail($ownerId);
+            $user = auth()->user();
+            $user->load([
+                'LabOwner.lab.location.city',
+            ]);
+
+            if (!$user->LabOwner) {
+                throw new \Exception('هذا المستخدم ليس صاحب مختبر.');
+            }
 
             $lab = $user->LabOwner->lab ?? null;
 
@@ -312,6 +314,7 @@ public function updateLabOwner($request): array
             return ['data' => $data, 'message' => $message];
         });
     }
+
 
 
 

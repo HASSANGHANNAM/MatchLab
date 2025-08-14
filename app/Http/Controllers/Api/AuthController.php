@@ -97,10 +97,10 @@ class AuthController extends Controller
             return Response::Error([], $message);
         }
     }
-        public function getOwnerLabInfo($ownerId): JsonResponse
+        public function getOwnerLabInfo(): JsonResponse
     {
         try {
-            $data = $this->userServices->getOwnerLabInfo($ownerId);
+            $data = $this->userServices->getOwnerLabInfo();
             return Response::success($data['data'], $data['message']);
         } catch (Throwable $th) {
             $message = $th->getMessage();

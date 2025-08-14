@@ -55,10 +55,10 @@ class LabSchedulController extends Controller
         }
     }
 
-        public function getLabAppointments(Lab $lab): JsonResponse
+        public function getLabAppointments(): JsonResponse
     {
         try {
-            $data = $this->appointmentServices->getLabAppointments($lab->id);
+            $data = $this->appointmentServices->getLabAppointments();
                 return Response::success($data['data'],$data['message'],$data['code']);
 
         } catch (Throwable $th) {

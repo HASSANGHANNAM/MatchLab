@@ -116,8 +116,14 @@ class appointmentServices
         });
     }
 
-    public function getLabAppointments(int $labId): array
+    public function getLabAppointments(): array
     {
+        $user = auth()->user();
+        if (!$user->LabOwner || !$user->LabOwner->lab) {
+            throw new \Exception('هذا المستخدم ليس صاحب مختبر.');
+        }
+        $labId = $user->LabOwner->lab->id;
+        
         $appointments = Appointment::with('patient')
             ->where('lab_id', $labId)
             ->orderBy('date_time', 'desc')
@@ -130,7 +136,7 @@ class appointmentServices
         return [
             'data' => $appointments,
             'message' => $message,
-            'code' => 200,// 'user' => null
+            'code' => 200,
         ];
     }
 

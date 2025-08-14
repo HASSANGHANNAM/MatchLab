@@ -51,7 +51,7 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::post('/updatePatient', [AuthController::class, 'updatePatient']);
     Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
-    Route::get('/getOwnerLabInfo/{ownerId}', [AuthController::class, 'getOwnerLabInfo']);
+    Route::get('/getOwnerLabInfo', [AuthController::class, 'getOwnerLabInfo']);
 
 });
 
@@ -85,7 +85,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/labs/{lab}/schedules', [LabSchedulController::class, 'setLabSchedules']);
     Route::get('/labs/{lab}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
     Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
-    Route::get('/allappointments/{lab}', [LabSchedulController::class, 'getLabAppointments']);
+    Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
     Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
 
 
