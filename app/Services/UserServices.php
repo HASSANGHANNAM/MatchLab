@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\Patient;
 use App\Models\LabOwner;
+use Carbon\Carbon;
 use App\Models\Location;
 use App\Services\NotificationService;
 use Illuminate\Auth\Events\Registered;
@@ -288,7 +289,6 @@ public function updateLabOwner($request): array
             }
 
             $lab = $user->LabOwner->lab ?? null;
-
             $data = [
                 'user' => [
                     'id'         => $user->id,
@@ -302,6 +302,7 @@ public function updateLabOwner($request): array
                     'image_path'          => $lab->image_path ?? null,
                     'price_of_global_unit'=> $lab->price_of_global_unit ?? null,
                     'subscriptions_status'=> $lab->subscriptions_status ?? null,
+                    'expiry_time'         => $lab->expiry_time ?? null,
                     'home_service'        => $lab->home_service ?? null,
                     'location' => [
                         'address' => $lab->location->address ?? null,

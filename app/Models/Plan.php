@@ -12,4 +12,10 @@ class Plan extends Model
     protected $table = "plans";
     protected $fillable = ['plan_name', 'price', 'number_of_days'];
     public $timestamps = true;
+
+        public function labs()
+    {
+        return $this->hasMany(Lab::class, 'plan_id');
+    }
+
 }

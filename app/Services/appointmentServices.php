@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\LabWorkingHour;
 use App\Models\Appointment;
+use App\Models\lab_have_analyses;
+use App\Models\abAnalysis;
+use App\Models\AppointmentLabHaveAnalys;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -11,11 +14,21 @@ use Throwable;
 
 class appointmentServices
 {
-    public function setLabSchedules(array $schedules, int $labId): array
+    public function setLabSchedules(array $schedules,): array
     {
-        return DB::transaction(function () use ($schedules, $labId) {
-            LabWorkingHour::where('lab_id', $labId)->delete();
+        return DB::transaction(function () use ($schedules) {
 
+            $user = auth()->user();
+            if (!$user->LabOwner || !$user->LabOwner->lab) {
+            return [
+                'data' => [],
+                'message' => 'هذا المستخدم ليس صاحب مختبر.',
+                'code' => 403
+            ];
+            }
+
+            $labId = $user->LabOwner->lab->id;
+            LabWorkingHour::where('lab_id', $labId)->delete();
             foreach ($schedules as $schedule) {
                 LabWorkingHour::create([
                     'lab_id' => $labId,
@@ -27,7 +40,8 @@ class appointmentServices
             }
             return [
                 'message' => 'تم حفظ جدول دوام المختبر بنجاح!',
-                'schedules' => LabWorkingHour::where('lab_id', $labId)->get(),
+                'data' => LabWorkingHour::where('lab_id', $labId)->get(),
+                'code'=> 200
             ];
         });
     }
@@ -69,12 +83,13 @@ class appointmentServices
         return $availableSlots;
     }
 
-        public function bookAppointment(array $data): Appointment
+    public function bookAppointment(array $data): array
     {
         if (!Auth::user() || !Auth::user()->hasRole('Patient')) {
-            throw new \Exception('غير مصرح لك بحجز الموعد.');
+            return ['message' => 'غير مصرح لك بحجز الموعد.',
+                      'user' => null
+                    ];
         }
-
         return DB::transaction(function () use ($data) {
             $labId = $data['lab_id'];
             $appointmentDateTime = Carbon::parse($data['date_time']);
@@ -86,23 +101,34 @@ class appointmentServices
                 ->where('start_time', '<=', $appointmentTime)
                 ->where('end_time', '>', $appointmentTime)
                 ->first();
-
             if (!$workingHour) {
-                throw new \Exception('هذا الوقت خارج أوقات عمل المختبر.');
+                return ['message' => 'هذا الوقت خارج أوقات عمل المختبر.',
+                        'user' => null
+                       ];
             }
 
             $startHour = $appointmentDateTime->copy()->startOfHour();
             $endHour = $appointmentDateTime->copy()->addHour();
-
             $appointmentsCount = Appointment::where('lab_id', $labId)
                 ->whereBetween('date_time', [$startHour, $endHour])
                 ->count();
-
-            if ($appointmentsCount > $workingHour->patients_per_hour) {
-                throw new \Exception('تم حجز العدد الأقصى من المرضى لهذه الساعة.');
+            if ($appointmentsCount >= $workingHour->patients_per_hour) {
+                return ['message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.', 'user' => null];
             }
 
-            return Appointment::create([
+            if (empty($data['analyses']) || !is_array($data['analyses'])) {
+                return ['message' => 'يجب اختيار التحاليل المطلوبة.', 'user' => null];
+            }
+            foreach ($data['analyses'] as $analysisId) {
+                $exists = lab_have_analyses::where('lab_id', $labId)
+                    ->where('lab_analys_id', $analysisId)
+                    ->exists();
+                if (!$exists) {
+                    return ['message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر.", 'user' => null];
+                }
+            }
+
+            $appointment = Appointment::create([
                 'type' => $data['type'],
                 'patient_name' => $data['patient_name'],
                 'patient_phone' => $data['patient_phone'],
@@ -113,6 +139,19 @@ class appointmentServices
                 'status' => 'pending',
                 'date_time' => $appointmentDateTime,
             ]);
+
+            foreach ($data['analyses'] as $analysisId) {
+                $labHaveAnalysis = lab_have_analyses::where('lab_id', $labId)
+                    ->where('lab_analys_id', $analysisId)
+                    ->first();
+                AppointmentLabHaveAnalys::create([
+                    'appointment_id' => $appointment->id,
+                    'lab_have_analys_id' => $labHaveAnalysis->id,
+                    'result' => null
+                ]);
+            }
+
+            return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'location')];
         });
     }
 
@@ -123,7 +162,7 @@ class appointmentServices
             throw new \Exception('هذا المستخدم ليس صاحب مختبر.');
         }
         $labId = $user->LabOwner->lab->id;
-        
+
         $appointments = Appointment::with('patient')
             ->where('lab_id', $labId)
             ->orderBy('date_time', 'desc')

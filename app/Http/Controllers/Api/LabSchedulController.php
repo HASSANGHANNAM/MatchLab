@@ -24,12 +24,11 @@ class LabSchedulController extends Controller
         $this->appointmentServices = $appointmentServices;
     }
 
-    public function setLabSchedules(LabWorkingHourRequest $request,Lab $lab): JsonResponse
+    public function setLabSchedules(LabWorkingHourRequest $request): JsonResponse
     {
         try {
-
-            $data = $this->appointmentServices->setLabSchedules($request->validated()['schedules'],$lab->id);
-            return Response::success($data['schedules'], $data['message']);
+            $data = $this->appointmentServices->setLabSchedules($request->validated()['schedules']);
+            return Response::success($data['data'], $data['message'],$data['code']);
         } catch (Throwable $th) {
             $message = $th->getMessage();
             return Response::Error([], $message);
@@ -49,7 +48,7 @@ class LabSchedulController extends Controller
     {
         try {
             $appointment = $this->appointmentServices->bookAppointment($request->validated());
-            return Response::success($appointment, "تم حجز الموعد بنجاح.");
+            return Response::success($appointment['user'], $appointment['message']);
         } catch (Throwable $th) {
             return Response::error([], $th->getMessage());
         }

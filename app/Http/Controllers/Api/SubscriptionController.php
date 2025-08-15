@@ -52,4 +52,5 @@ class SubscriptionController extends Controller
             return Response::Error([], $message);
         }
     }
+    
 }

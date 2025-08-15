@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\EvaluationController;
 use App\Http\Controllers\Api\LabController;
 use App\Http\Controllers\Api\SampleController;
+use App\Http\Controllers\Api\addResultController;
 use App\Http\Controllers\Api\LabSchedulController;
 use App\Services\NotificationService;
 use App\Http\Controllers\Api\SubscriptionController;
@@ -52,12 +53,13 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::post('/updatePatient', [AuthController::class, 'updatePatient']);
     Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
     Route::get('/getOwnerLabInfo', [AuthController::class, 'getOwnerLabInfo']);
+    Route::get('/citySearch', [CityController::class, 'citySearch']);
 
 });
 
 // 'CorsMiddleware'
 Route::group(['middleware' => ['auth:sanctum']], function () {
-    Route::get('/citySearch', [CityController::class, 'citySearch']);
+    // Route::get('/citySearch', [CityController::class, 'citySearch']);
     Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
     Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
     Route::get('/labSearchSuperAdmin', [LabController::class, 'labSearchSuperAdmin']);
@@ -82,11 +84,12 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/addPlan', [SubscriptionController::class, 'addPlan']);
     Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
     Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
-    Route::post('/labs/{lab}/schedules', [LabSchedulController::class, 'setLabSchedules']);
+    Route::post('/schedules', [LabSchedulController::class, 'setLabSchedules']);
     Route::get('/labs/{lab}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
     Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
     Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
     Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
+    Route::post('/addresult', [addResultController::class, 'addResult']);
 
 
 
