@@ -92,17 +92,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
     Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
     Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
-<<<<<<< Updated upstream
     Route::post('/addresult', [addResultController::class, 'addResult']);
-
-
-
-
-
-=======
     Route::get('/getBalance', [PaymentController::class, 'getBalance']);
     Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
     Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);
     Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
->>>>>>> Stashed changes
 });
