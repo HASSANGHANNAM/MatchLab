@@ -12,6 +12,12 @@ use Spatie\Permission\Models\Role;
 
 class SubscriptionServices
 {
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
     public function addPlan($request): array
     {
         return DB::transaction(function () use ($request) {
@@ -62,6 +68,12 @@ class SubscriptionServices
             if (Auth::user()->hasRole('LabOwner')) {
                 $lab = User::with('labOwner.lab')->findOrFail(Auth::id())->labOwner->lab;
                 $plan = Plan::find($request['plan_id']);
+                $user =  DB::table('users')->where('id', Auth::id())->first();
+                $superAdmin = DB::table('users')->where('email', "superAdmin@gmail.com")->first();
+                $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $superAdmin->stripe_account_id, $plan->price);
+                if ($payment['code'] != 200) {
+                    return ['message' => 'fail add plan subscription because transactionAmount fail', 'user' => null];
+                }
                 $startDate = now();
                 if ($lab->expiry_time && $lab->expiry_time < now()) {
                     $startDate = now();

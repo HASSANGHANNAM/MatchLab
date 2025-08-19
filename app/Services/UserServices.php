@@ -18,8 +18,16 @@ use Illuminate\Auth\Events\Registered;
 
 class UserServices
 {
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
+
     public function registerPatient($request): array
     {
+
 
         return DB::transaction(function () use ($request) {
             $user = User::query()->create([
@@ -37,7 +45,6 @@ class UserServices
             $permissions = $patientRole->permissions()->pluck('name')->toArray();
             $user->givePermissionTo($permissions);
 
-            // إنشاء سجل المريض
             $user->patient()->create([
                 'phone' => $request['phone'] ?? null,
                 'gender' => $request['gender'] ?? null,
@@ -46,13 +53,27 @@ class UserServices
                 'Health_Problems' => $request['Health_Problems'] ?? null
             ]);
 
-            event(new Registered($user));
+            // event(new Registered($user));
 
             $user->load('roles', 'permissions');
             $user = User::query()->find($user->id);
             $user = $this->appendRolesAndPermissions($user);
 
-
+            // stripe
+            $patientStripeAccount = $this->stripeService->createStripeAccount(
+                $request['email'],
+                $request['first_name'],
+                $request['last_name']
+            );
+            if ($patientStripeAccount['code'] == 200) {
+                DB::table('users')->where('id', $user->id)->update(['stripe_account_id' => $patientStripeAccount['data']['Account_id']]);
+                $user->stripe_account_id = $patientStripeAccount['data']['Account_id'];
+            } else {
+                DB::rollBack();
+                $message = 'Patient user created fail! because stripe account do not created ';
+                return ['user' => null, 'message' => $message];
+            }
+            //strip end
             $user['token'] = $user->createToken("token")->plainTextToken;
             $data['token'] = $user['token'];
 
@@ -108,19 +129,31 @@ class UserServices
                 'user_id' => $user['id'] ?? null,
                 'lab_id' => $lab['id'] ?? null,
             ]);
-            event(new Registered($user));
-
-
+            // event(new Registered($user));
             $user->load('roles', 'permissions');
             $user = User::query()->find($user->id);
             $user = $this->appendRolesAndPermissions($user);
-
+            // stripe
+            $LabOwnerStripeAccount = $this->stripeService->createStripeAccount(
+                $request['email'],
+                $request['first_name'],
+                $request['last_name']
+            );
+            if ($LabOwnerStripeAccount['code'] == 200) {
+                DB::table('users')->where('id', $user->id)->update(['stripe_account_id' => $LabOwnerStripeAccount['data']['Account_id']]);
+                $user->stripe_account_id = $LabOwnerStripeAccount['data']['Account_id'];
+            } else {
+                DB::rollBack();
+                $message = 'LabOwner user created fail! because stripe account do not created ';
+                return ['user' => null, 'message' => $message];
+            }
+            //strip end
             $user['token'] = $user->createToken("token")->plainTextToken;
 
             $data['token'] = $user['token'];
             $data['roles'] = $user['roles'];
 
-             $notificationService = new NotificationService();
+            $notificationService = new NotificationService();
             $notificationService->send(
                 $user,
                 "تم إنشاء حساب ادمن ",
@@ -143,8 +176,8 @@ class UserServices
                 $code = 401;
             } else {
                 if (isset($request['fcm_token'])) {
-                $user->update(['fcm_token' => $request['fcm_token']]);
-                 }
+                    $user->update(['fcm_token' => $request['fcm_token']]);
+                }
 
                 $user = $this->appendRolesAndPermissions($user);
                 $user['token'] = $user->createToken("token")->plainTextToken;
@@ -158,7 +191,6 @@ class UserServices
                 );
                 $message = 'User login successfully';
                 $code = 200;
-
             }
         } else {
             $data = null;
@@ -189,24 +221,24 @@ class UserServices
     }
 
     public function updatePatient($request): array
-{
-    return DB::transaction(function () use ($request) {
-        $user = auth()->user();
+    {
+        return DB::transaction(function () use ($request) {
+            $user = auth()->user();
 
-        $user->update([
-            'first_name' => $request['first_name'] ?? $user->first_name ?? null,
-            'last_name' => $request['last_name'] ?? $user->last_name,
-            'email' => $request['email'] ?? $user->email ?? null,
-            'password' => isset($request['password']) ? Hash::make($request['password']) : $user->password,
-            'fcm_token' => $request['fcm_token'] ?? $user->fcm_token,
-        ]);
+            $user->update([
+                'first_name' => $request['first_name'] ?? $user->first_name ?? null,
+                'last_name' => $request['last_name'] ?? $user->last_name,
+                'email' => $request['email'] ?? $user->email ?? null,
+                'password' => isset($request['password']) ? Hash::make($request['password']) : $user->password,
+                'fcm_token' => $request['fcm_token'] ?? $user->fcm_token,
+            ]);
 
-        $user->patient()->update([
-            'phone' => $request['phone'] ?? $user->patient->phone,
-            'gender' => $request['gender'] ?? $user->patient->gender,
-            'dob' => $request['dob'] ?? $user->patient->dob,
-            'Health_Problems' => $request['Health_Problems'] ?? $user->patient->Health_Problems,
-        ]);
+            $user->patient()->update([
+                'phone' => $request['phone'] ?? $user->patient->phone,
+                'gender' => $request['gender'] ?? $user->patient->gender,
+                'dob' => $request['dob'] ?? $user->patient->dob,
+                'Health_Problems' => $request['Health_Problems'] ?? $user->patient->Health_Problems,
+            ]);
             $notificationService = new NotificationService();
             $notificationService->send(
                 $user,
@@ -214,68 +246,68 @@ class UserServices
                 "تم تحديث معلومات حسابك كمريض بنجاح."
             );
 
-        $message = 'Patient information updated successfully!';
-        $code =200;
-        return ['user' => $user, 'message' => $message, 'code' => $code];
-    });
-}
+            $message = 'Patient information updated successfully!';
+            $code = 200;
+            return ['user' => $user, 'message' => $message, 'code' => $code];
+        });
+    }
 
-public function updateLabOwner($request): array
-{
-    return DB::transaction(function () use ($request) {
-        $user = auth()->user();
+    public function updateLabOwner($request): array
+    {
+        return DB::transaction(function () use ($request) {
+            $user = auth()->user();
 
-        $user->update([
-            'first_name' => $request['first_name'] ?? $user->first_name,
-            'last_name' => $request['last_name'] ?? $user->last_name,
-            'email' => $request['email'] ?? $user->email,
-            'password' => isset($request['password']) ? Hash::make($request['password']) : $user->password,
-            'fcm_token' => $request['fcm_token'] ?? $user->fcm_token,
+            $user->update([
+                'first_name' => $request['first_name'] ?? $user->first_name,
+                'last_name' => $request['last_name'] ?? $user->last_name,
+                'email' => $request['email'] ?? $user->email,
+                'password' => isset($request['password']) ? Hash::make($request['password']) : $user->password,
+                'fcm_token' => $request['fcm_token'] ?? $user->fcm_token,
 
-        ]);
+            ]);
 
-        $labOwner = $user->LabOwner;
-        $lab = $labOwner->lab;
+            $labOwner = $user->LabOwner;
+            $lab = $labOwner->lab;
 
-        $lab->update([
-            'lab_name' => $request['lab_name'] ?? $lab->lab_name,
-            'contact_info' => $request['contact_info'] ?? $lab->contact_info,
-            'price_of_global_unit' => $request['price_of_global_unit'] ?? $lab->price_of_global_unit,
-            'subscriptions_status' => $request['subscriptions_status'] ?? $lab->subscriptions_status,
-            'home_service' => $request['home_service'] ?? $lab->home_service,
-        ]);
+            $lab->update([
+                'lab_name' => $request['lab_name'] ?? $lab->lab_name,
+                'contact_info' => $request['contact_info'] ?? $lab->contact_info,
+                'price_of_global_unit' => $request['price_of_global_unit'] ?? $lab->price_of_global_unit,
+                'subscriptions_status' => $request['subscriptions_status'] ?? $lab->subscriptions_status,
+                'home_service' => $request['home_service'] ?? $lab->home_service,
+            ]);
 
-        $lab->location()->update([
-            'address' => $request['address'] ?? $lab->location->address,
-            'city_id' => $request['city_id'] ?? $lab->location->city_id,
-        ]);
+            $lab->location()->update([
+                'address' => $request['address'] ?? $lab->location->address,
+                'city_id' => $request['city_id'] ?? $lab->location->city_id,
+            ]);
 
-        if (isset($request['image']) && $request['image'] instanceof \Illuminate\Http\UploadedFile) {
-            $fileName = $request['image']->getClientOriginalName();
-            $request['image']->move(public_path('lab_images'), $fileName);
-            $lab->update(['image_path' => "/lab_images/" . $fileName]);
-        }
+            if (isset($request['image']) && $request['image'] instanceof \Illuminate\Http\UploadedFile) {
+                $fileName = $request['image']->getClientOriginalName();
+                $request['image']->move(public_path('lab_images'), $fileName);
+                $lab->update(['image_path' => "/lab_images/" . $fileName]);
+            }
 
-        // return [
-        //     'user' => $user->load('LabOwner.lab.location'),
-        //     'message' => 'Lab Owner information updated successfully!'
-        // ];
+            // return [
+            //     'user' => $user->load('LabOwner.lab.location'),
+            //     'message' => 'Lab Owner information updated successfully!'
+            // ];
 
-        $user = $user->load('LabOwner.lab.location');
+            $user = $user->load('LabOwner.lab.location');
 
-        $notificationService = new NotificationService();
-        $notificationService->send(
-            $user,
-            "تحديث بيانات المختبر",
-            "تم تحديث معلومات المختبر الخاصة بك بنجاح."
-        );
+            $notificationService = new NotificationService();
+            $notificationService->send(
+                $user,
+                "تحديث بيانات المختبر",
+                "تم تحديث معلومات المختبر الخاصة بك بنجاح."
+            );
 
-        $message = 'Lab Owner information updated successfully!';
-        $code = 200 ;
-        return ['user' => $user, 'message' => $message, 'code' => $code];
-    });
-}
-        public function getOwnerLabInfo(): array
+            $message = 'Lab Owner information updated successfully!';
+            $code = 200;
+            return ['user' => $user, 'message' => $message, 'code' => $code];
+        });
+    }
+    public function getOwnerLabInfo(): array
     {
         return DB::transaction(function () {
 
@@ -303,6 +335,8 @@ public function updateLabOwner($request): array
                     'price_of_global_unit'=> $lab->price_of_global_unit ?? null,
                     'subscriptions_status'=> $lab->subscriptions_status ?? null,
                     'expiry_time'         => $lab->expiry_time ?? null,
+                    'price_of_global_unit' => $lab->price_of_global_unit ?? null,
+                    'subscriptions_status' => $lab->subscriptions_status ?? null,
                     'home_service'        => $lab->home_service ?? null,
                     'location' => [
                         'address' => $lab->location->address ?? null,
@@ -315,10 +349,6 @@ public function updateLabOwner($request): array
             return ['data' => $data, 'message' => $message];
         });
     }
-
-
-
-
     private function appendRolesAndPermissions($user)
     {
         $roles = [];

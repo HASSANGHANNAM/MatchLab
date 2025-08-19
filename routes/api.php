@@ -9,8 +9,10 @@ use App\Http\Controllers\Api\LabController;
 use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\addResultController;
 use App\Http\Controllers\Api\LabSchedulController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Services\NotificationService;
 use App\Http\Controllers\Api\SubscriptionController;
+use App\Http\Controllers\PaymentController as ControllersPaymentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -45,6 +47,7 @@ Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
 Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
 Route::post('/login', [AuthController::class, 'login']);
 // });
+
 
 Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function () {
 
@@ -89,10 +92,17 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
     Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
     Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
+<<<<<<< Updated upstream
     Route::post('/addresult', [addResultController::class, 'addResult']);
 
 
 
 
 
+=======
+    Route::get('/getBalance', [PaymentController::class, 'getBalance']);
+    Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
+    Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);
+    Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
+>>>>>>> Stashed changes
 });

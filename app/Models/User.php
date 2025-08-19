@@ -25,6 +25,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'fcm_token',
+        'stripe_account_id'
     ];
 
     /**

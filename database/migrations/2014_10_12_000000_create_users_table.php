@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('first_name', 45); //عدلت عليها gh
             $table->string('last_name', 45); //عدلت عليها gh
             $table->string('email', 255)->unique();
+            $table->string('stripe_account_id')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password', 255);
             $table->unique(['first_name', 'last_name']);

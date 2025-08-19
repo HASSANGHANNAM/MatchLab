@@ -17,7 +17,7 @@ use Throwable;
 
 class LabSchedulController extends Controller
 {
-        private appointmentServices $appointmentServices;
+    private appointmentServices $appointmentServices;
 
     public function __construct(appointmentServices $appointmentServices)
     {
@@ -35,7 +35,7 @@ class LabSchedulController extends Controller
         }
     }
 
-        public function getAvailableAppointments(Lab $lab): JsonResponse
+    public function getAvailableAppointments(Lab $lab): JsonResponse
     {
         try {
             $slots = $this->appointmentServices->getAvailableAppointments($lab->id);
@@ -44,7 +44,7 @@ class LabSchedulController extends Controller
             return Response::error([], $th->getMessage());
         }
     }
-            public function bookAppointment(BookAppointmentRequest $request): JsonResponse
+    public function bookAppointment(BookAppointmentRequest $request): JsonResponse
     {
         try {
             $appointment = $this->appointmentServices->bookAppointment($request->validated());
@@ -54,12 +54,11 @@ class LabSchedulController extends Controller
         }
     }
 
-        public function getLabAppointments(): JsonResponse
+    public function getLabAppointments(): JsonResponse
     {
         try {
             $data = $this->appointmentServices->getLabAppointments();
-                return Response::success($data['data'],$data['message'],$data['code']);
-
+            return Response::success($data['data'], $data['message'], $data['code']);
         } catch (Throwable $th) {
             return Response::error([], $th->getMessage());
         }
@@ -74,13 +73,10 @@ class LabSchedulController extends Controller
             $data = $this->appointmentServices->updateAppointmentStatus($appointmentId, $status);
 
             return Response::success($data['data'], $data['message'], $data['code']);
-
         } catch (ModelNotFoundException $e) {
             return Response::error([], 'الحجز غير موجود.', 404);
-
         } catch (Throwable $e) {
             return Response::error([], 'حدث خطأ غير متوقع: ' . $e->getMessage(), 500);
         }
     }
-
 }

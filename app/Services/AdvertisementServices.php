@@ -115,7 +115,6 @@ class AdvertisementServices
                     "تم تحديث الإعلان بنجاح بعنوان: {$advertisement->title}"
                 );
                 $message = 'successfully!';
-
             } else {
                 $message = 'Advertisement not found!';
                 $data['advertisement'] = null;

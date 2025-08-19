@@ -3,13 +3,21 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Services\StripeService;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 
 class RolesPermissionSeeder extends Seeder
 {
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
     /**
      * Run the database seeds.
      *
@@ -71,8 +79,8 @@ class RolesPermissionSeeder extends Seeder
             'last_name' => 'super',
             'email' => 'superAdmin@gmail.com',
             'password' => bcrypt('super1234'),
+            'stripe_account_id' => 'acct_1Rx4dfR98VzkLBxU'
         ]);
-
         $superAdminUser->assignRole($superAdminRole);
 
         $permissions = $superAdminRole->permissions()->pluck('name')->toArray();
