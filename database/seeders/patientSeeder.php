@@ -8,6 +8,7 @@ use App\Models\FavoriteLab;
 use App\Models\Lab;
 use App\Models\Patient;
 use App\Models\User;
+use App\Services\StripeService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -15,9 +16,17 @@ use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Faker\Factory as Faker;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 
 class patientSeeder extends Seeder
 {
+
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
     /**
      * Run the database seeds.
      */
@@ -59,6 +68,7 @@ class patientSeeder extends Seeder
                 'gender' => "male",
                 'dob' => "2003-06-01",
                 'Health_Problems' => "no thing",
+                'stripe_account_id' => 'acct_1Rxp7XJDjffUCd6F'
             ],
             [
                 'first_name' => "hoda",
@@ -69,6 +79,7 @@ class patientSeeder extends Seeder
                 'gender' => "female",
                 'dob' => "2015-01-06",
                 'Health_Problems' => "no thing",
+                'stripe_account_id' => 'acct_1Rxp7fJEdhSsZSOh'
             ]
         ];
         foreach ($patients as $patient) {
@@ -76,7 +87,8 @@ class patientSeeder extends Seeder
                 'first_name' => $patient['first_name'],
                 'last_name' => $patient['last_name'],
                 'email' => $patient['email'],
-                'password' => $patient['password']
+                'password' => $patient['password'],
+                'stripe_account_id' =>  $patient['stripe_account_id']
             ]);
             $patientRole = Role::query()->where('name', 'patient')->first();
             $user->assignRole($patientRole);

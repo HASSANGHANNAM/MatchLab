@@ -9,6 +9,7 @@ use App\Models\LabAnalysis;
 use App\Models\Location;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\StripeService;
 use Carbon\Carbon;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -19,6 +20,12 @@ use Spatie\Permission\Models\Role;
 
 class ownerSeeder extends Seeder
 {
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
 
     /**
      * Run the database seeds.
@@ -55,6 +62,7 @@ class ownerSeeder extends Seeder
                 'price_of_global_unit' => 1,
                 'subscriptions_status' => false,
                 'home_service' => false,
+                'stripe_account_id' => 'acct_1Rxp3uJNpTojavvU'
             ],
             [
                 'first_name' => "Gaith",
@@ -69,6 +77,7 @@ class ownerSeeder extends Seeder
                 'price_of_global_unit' => 1,
                 'subscriptions_status' => false,
                 'home_service' => false,
+                'stripe_account_id' => 'acct_1Rxp43JOnPFr0MiF'
             ]
         ];
         foreach ($owners as $ow) {
@@ -76,7 +85,8 @@ class ownerSeeder extends Seeder
                 'first_name' => $ow['first_name'],
                 'last_name' => $ow['last_name'],
                 'email' => $ow['email'],
-                'password' => $ow['password']
+                'password' => $ow['password'],
+                'stripe_account_id' => $ow['stripe_account_id']
             ]);
             $ownerRole = Role::query()->where('name', 'LabOwner')->first();
             $user->assignRole($ownerRole);

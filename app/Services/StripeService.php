@@ -169,6 +169,19 @@ class StripeService
             return ['message' => $message, 'data' => null, 'code' => 403];
         }
     }
+    public function depositBalanceToUser($id, $amount): array
+    {
+        if (Auth::user()->hasRole('SuperAdmin')) {
+            if (! is_numeric($id)) {
+                return ['message' => 'id must be number', 'data' => null, 'code' => 403];
+            }
+            $user =  DB::table('users')->where('id', $id)->first();
+            return $this->push($user->stripe_account_id, $amount);
+        } else {
+            $message = 'Unauthorized access!';
+            return ['message' => $message, 'data' => null, 'code' => 403];
+        }
+    }
     public function withdrawBalance($amount): array
     {
         if (Auth::user()->hasRole('Patient') || Auth::user()->hasRole('LabOwner') || Auth::user()->hasRole('SuperAdmin')) {
@@ -242,7 +255,7 @@ class StripeService
     {
         $checkPull = $this->pull($sourceAccountId, $amount);
         if ($checkPull['code'] != 200) {
-            return ['message' => "fail transactionAmount", 'data' => null, 'code' => 401];
+            return ['message' => $checkPull['message'], 'data' => null, 'code' => 401];
         }
         $checkPush = $this->push($destinationAccountId, $amount);
         if ($checkPush['code'] != 200) {

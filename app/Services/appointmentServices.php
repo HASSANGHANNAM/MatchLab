@@ -14,17 +14,23 @@ use Throwable;
 
 class appointmentServices
 {
+    protected $stripeService;
+
+    public function __construct(StripeService $stripeService)
+    {
+        $this->stripeService = $stripeService;
+    }
     public function setLabSchedules(array $schedules,): array
     {
         return DB::transaction(function () use ($schedules) {
 
             $user = auth()->user();
             if (!$user->LabOwner || !$user->LabOwner->lab) {
-            return [
-                'data' => [],
-                'message' => 'هذا المستخدم ليس صاحب مختبر.',
-                'code' => 403
-            ];
+                return [
+                    'data' => [],
+                    'message' => 'هذا المستخدم ليس صاحب مختبر.',
+                    'code' => 403
+                ];
             }
 
             $labId = $user->LabOwner->lab->id;
@@ -41,16 +47,16 @@ class appointmentServices
             return [
                 'message' => 'تم حفظ جدول دوام المختبر بنجاح!',
                 'data' => LabWorkingHour::where('lab_id', $labId)->get(),
-                'code'=> 200
+                'code' => 200
             ];
         });
     }
 
-        public function getAvailableAppointments(int $labId): array
+    public function getAvailableAppointments(int $labId): array
     {
         $now = Carbon::now();
         $availableSlots = [];
-        $days= 3;
+        $days = 3;
 
         $workingHours = LabWorkingHour::where('lab_id', $labId)->get();
 
@@ -86,25 +92,31 @@ class appointmentServices
     public function bookAppointment(array $data): array
     {
         if (!Auth::user() || !Auth::user()->hasRole('Patient')) {
-            return ['message' => 'غير مصرح لك بحجز الموعد.',
-                      'user' => null
-                    ];
+            return [
+                'message' => 'غير مصرح لك بحجز الموعد.',
+                'user' => null
+            ];
         }
         return DB::transaction(function () use ($data) {
             $labId = $data['lab_id'];
             $appointmentDateTime = Carbon::parse($data['date_time']);
             $dayOfWeek = $appointmentDateTime->format('l');
             $appointmentTime = $appointmentDateTime->format('H:i:s');
-
+            $patient = DB::table('patients')
+                ->where('user_id', Auth::user()->id)
+                ->first();
+            $data['patient_id'] = $patient->id;
+            $lab = DB::table('labs')->where('id', $labId)->first();
             $workingHour = LabWorkingHour::where('lab_id', $labId)
                 ->where('day_of_week', $dayOfWeek)
                 ->where('start_time', '<=', $appointmentTime)
                 ->where('end_time', '>', $appointmentTime)
                 ->first();
             if (!$workingHour) {
-                return ['message' => 'هذا الوقت خارج أوقات عمل المختبر.',
-                        'user' => null
-                       ];
+                return [
+                    'message' => 'هذا الوقت خارج أوقات عمل المختبر.',
+                    'user' => null
+                ];
             }
 
             $startHour = $appointmentDateTime->copy()->startOfHour();
@@ -119,6 +131,7 @@ class appointmentServices
             if (empty($data['analyses']) || !is_array($data['analyses'])) {
                 return ['message' => 'يجب اختيار التحاليل المطلوبة.', 'user' => null];
             }
+            $price = 0;
             foreach ($data['analyses'] as $analysisId) {
                 $exists = lab_have_analyses::where('lab_id', $labId)
                     ->where('lab_analys_id', $analysisId)
@@ -126,8 +139,21 @@ class appointmentServices
                 if (!$exists) {
                     return ['message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر.", 'user' => null];
                 }
+                $analysis =  DB::table('lab_analyses')->where('id', $analysisId)->first();
+                $price += $analysis->global_price * $lab->price_of_global_unit;
             }
-
+            // start stripe
+            $user =  DB::table('users')->where('id', Auth::id())->first();
+            $labUser = DB::table('lab_owners')
+                ->where('lab_owners.lab_id', $labId)
+                ->join('users', 'users.id', '=', 'lab_owners.user_id')
+                ->select('users.*')
+                ->first();
+            $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $labUser->stripe_account_id, $price);
+            if ($payment['code'] != 200) {
+                return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
+            }
+            // end stripe 
             $appointment = Appointment::create([
                 'type' => $data['type'],
                 'patient_name' => $data['patient_name'],
@@ -138,6 +164,7 @@ class appointmentServices
                 'location_id' => $data['location_id'] ?? null,
                 'status' => 'pending',
                 'date_time' => $appointmentDateTime,
+                'total_Price' => $price
             ]);
 
             foreach ($data['analyses'] as $analysisId) {
@@ -178,9 +205,7 @@ class appointmentServices
             'code' => 200,
         ];
     }
-
-
-     public function updateAppointmentStatus(int $appointmentId, string $status): array
+    public function updateAppointmentStatus(int $appointmentId, string $status): array
     {
         $appointment = Appointment::findOrFail($appointmentId);
 
@@ -193,11 +218,4 @@ class appointmentServices
             'code' => 200,
         ];
     }
-
-
-
-
-
-
 }
-

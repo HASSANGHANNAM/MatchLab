@@ -72,7 +72,7 @@ class SubscriptionServices
                 $superAdmin = DB::table('users')->where('email', "superAdmin@gmail.com")->first();
                 $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $superAdmin->stripe_account_id, $plan->price);
                 if ($payment['code'] != 200) {
-                    return ['message' => 'fail add plan subscription because transactionAmount fail', 'user' => null];
+                    return ['message' => 'fail add plan subscription because ' . $payment['message'], 'user' => null];
                 }
                 $startDate = now();
                 if ($lab->expiry_time && $lab->expiry_time < now()) {
@@ -94,5 +94,4 @@ class SubscriptionServices
             return ['message' => $message, 'user' => null];
         });
     }
-    
 }

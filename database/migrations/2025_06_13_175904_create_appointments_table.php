@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('patient_name');
             $table->string('patient_phone');
             $table->string('patient_id_number');
-
+            $table->float('total_Price');
             $table->unsignedBigInteger('patient_id');
             $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
 

@@ -57,7 +57,6 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
     Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
     Route::get('/getOwnerLabInfo', [AuthController::class, 'getOwnerLabInfo']);
     Route::get('/citySearch', [CityController::class, 'citySearch']);
-
 });
 
 // 'CorsMiddleware'
@@ -97,4 +96,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
     Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);
     Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
+    Route::post('/depositBalanceToUser/{id}/{amount}', [PaymentController::class, 'depositBalanceToUser']);
 });

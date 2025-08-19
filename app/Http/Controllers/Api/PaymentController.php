@@ -64,4 +64,14 @@ class PaymentController extends Controller
             return Response::Error([], $message);
         }
     }
+    public function depositBalanceToUser($id, $amount): JsonResponse
+    {
+        try {
+            $data = $this->stripeService->depositBalanceToUser($id, $amount);
+            return Response::success($data['data'], $data['message'], $data['code']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
 }
