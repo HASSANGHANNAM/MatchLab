@@ -97,4 +97,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);
     Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
     Route::post('/depositBalanceToUser/{id}/{amount}', [PaymentController::class, 'depositBalanceToUser']);
+    Route::get('/getUsersWithRoles', [AuthController::class, 'getUsersWithRoles']);
 });

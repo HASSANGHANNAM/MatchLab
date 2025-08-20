@@ -11,6 +11,7 @@ use App\Http\Responses\Response;
 use App\Services\UserServices;
 use App\Http\Requests\Validator;
 use App\Models\Author;
+use App\Models\User;
 use Illuminate\Http\jsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
@@ -25,7 +26,6 @@ class AuthController extends Controller
     {
         $this->userServices = $userServices;
     }
-
     public function registerPatient(UserSinupRequest $request): JsonResponse
     {
         try {
@@ -76,7 +76,7 @@ class AuthController extends Controller
         return Response::Success($this->userServices->details(), 'user info successfully');
     }
 
-        public function updatePatient(UserSinupRequest $request): JsonResponse
+    public function updatePatient(UserSinupRequest $request): JsonResponse
     {
         try {
             $data = $this->userServices->updatePatient($request->validated());
@@ -87,7 +87,7 @@ class AuthController extends Controller
         }
     }
 
-            public function updateLabOwner(UserSinupLabOwnerRequest $request): JsonResponse
+    public function updateLabOwner(UserSinupLabOwnerRequest $request): JsonResponse
     {
         try {
             $data = $this->userServices->updateLabOwner($request->validated());
@@ -97,7 +97,7 @@ class AuthController extends Controller
             return Response::Error([], $message);
         }
     }
-        public function getOwnerLabInfo(): JsonResponse
+    public function getOwnerLabInfo(): JsonResponse
     {
         try {
             $data = $this->userServices->getOwnerLabInfo();
@@ -107,7 +107,14 @@ class AuthController extends Controller
             return Response::Error([], $message);
         }
     }
-
-
+    public function getUsersWithRoles(): JsonResponse
+    {
+        try {
+            $data = $this->userServices->getUsersWithRoles();
+            return Response::success($data['data'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
 }
-

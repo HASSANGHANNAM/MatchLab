@@ -332,8 +332,8 @@ class UserServices
                     'lab_name'            => $lab->lab_name ?? null,
                     'contact_info'        => $lab->contact_info ?? null,
                     'image_path'          => $lab->image_path ?? null,
-                    'price_of_global_unit'=> $lab->price_of_global_unit ?? null,
-                    'subscriptions_status'=> $lab->subscriptions_status ?? null,
+                    'price_of_global_unit' => $lab->price_of_global_unit ?? null,
+                    'subscriptions_status' => $lab->subscriptions_status ?? null,
                     'expiry_time'         => $lab->expiry_time ?? null,
                     'price_of_global_unit' => $lab->price_of_global_unit ?? null,
                     'subscriptions_status' => $lab->subscriptions_status ?? null,
@@ -365,5 +365,24 @@ class UserServices
         $user['permissions'] = $permissions;
 
         return $user;
+    }
+    public function getUsersWithRoles(): array
+    {
+        $data['users'] = null;
+        if (Auth::user()->hasRole('SuperAdmin')) {
+            $users = User::with('roles:id,name')->get();
+            $data['users'] = $users->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'roles' => $user->roles->pluck('name')
+                ];
+            });
+            return ['data' => $data, 'message' => 'succesfully!'];
+        } else {
+            return ['data' => $data, 'message' => 'Unauthorized access!'];
+        }
     }
 }
