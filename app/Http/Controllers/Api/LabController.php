@@ -60,4 +60,14 @@ class LabController extends Controller
             return Response::Error([], $message);
         }
     }
+    public function updateGlobalUnitPrice($price_of_global_unit): JsonResponse
+    {
+        try {
+            $data = $this->labServices->updateGlobalUnitPrice($price_of_global_unit);
+            return Response::success($data['data'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
 }

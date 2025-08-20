@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\SampleController;
 use App\Http\Controllers\Api\addResultController;
 use App\Http\Controllers\Api\LabSchedulController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ReportController;
 use App\Services\NotificationService;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\PaymentController as ControllersPaymentController;
@@ -98,4 +99,6 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
     Route::post('/depositBalanceToUser/{id}/{amount}', [PaymentController::class, 'depositBalanceToUser']);
     Route::get('/getUsersWithRoles', [AuthController::class, 'getUsersWithRoles']);
+    Route::get('/labReport', [ReportController::class, 'labReport']);
+    Route::put('/updateGlobalUnitPrice/{price_of_global_unit}', [LabController::class, 'updateGlobalUnitPrice']);
 });

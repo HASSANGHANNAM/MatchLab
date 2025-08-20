@@ -274,4 +274,19 @@ class LabServices
         }
         return ['message' => $message, 'data' => null, 'code' => $code];
     }
+    public function updateGlobalUnitPrice($price_of_global_unit): array
+    {
+        if (Auth::user()->hasRole('LabOwner')) {
+            $lab = User::with('labOwner.lab')->findOrFail(Auth::id())->labOwner->lab;
+            $updated = DB::table('labs')
+                ->where('id', $lab->id)
+                ->update([
+                    'price_of_global_unit' => $price_of_global_unit,
+                ]);
+            return ['message' => 'successfully!', 'data' => null];
+        } else {
+            $message = 'Unauthorized access!';
+        }
+        return ['message' => $message, 'data' => null];
+    }
 }

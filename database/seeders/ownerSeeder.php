@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Advertisement;
 use App\Models\Lab;
 use App\Models\lab_have_analyses;
+use App\Models\Lab_have_Plan;
 use App\Models\LabAnalysis;
 use App\Models\Location;
 use App\Models\Subscription;
@@ -129,7 +130,22 @@ class ownerSeeder extends Seeder
                     'expiry_time' => $end
                 ]
             );
-
+            if ($duration == 7) {
+                Lab_have_Plan::query()->create([
+                    'lab_id' => $lab['id'],
+                    'plan_id' => 1
+                ]);
+            } elseif ($duration == 30) {
+                Lab_have_Plan::query()->create([
+                    'lab_id' => $lab['id'],
+                    'plan_id' => 2
+                ]);
+            } elseif ($duration == 365) {
+                Lab_have_Plan::query()->create([
+                    'lab_id' => $lab['id'],
+                    'plan_id' => 3
+                ]);
+            }
 
 
 

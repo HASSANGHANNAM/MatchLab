@@ -25,10 +25,10 @@ class DatabaseSeeder extends Seeder
             citySeeder::class,
             samplesSeeder::class,
             labAnalysesSeeder::class,
+            planSeeder::class,
             ownerSeeder::class,
             patientSeeder::class,
-            LabWorkingHourSeeder::class,
-            planSeeder::class
+            LabWorkingHourSeeder::class
         ]);
     }
 }
