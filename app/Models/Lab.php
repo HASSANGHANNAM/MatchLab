@@ -11,7 +11,7 @@ class Lab extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "labs";
-    protected $fillable = ['lab_name', 'contact_info', 'image_path', 'price_of_global_unit', 'subscriptions_status', 'home_service', 'location_id', 'subscription_id'];
+    protected $fillable = ['lab_name', 'contact_info', 'image_path', 'price_of_global_unit', 'subscriptions_status', 'home_service', 'location_id', 'expiry_time'];
     public $timestamps = true;
     public function location()
     {
@@ -34,10 +34,6 @@ class Lab extends Model
         return $this->favorite_labs()
             ->where('patient_id', $patientId)
             ->exists();
-    }
-    public function subscriptions()
-    {
-        return $this->hasMany(Subscription::class);
     }
     public function advertisements()
     {
@@ -63,13 +59,8 @@ class Lab extends Model
     {
         return $this->belongsToMany(LabAnalysis::class, 'lab_have_analyses', 'lab_id', 'lab_analys_id');
     }
-    public function subscription()
-    {
-        return $this->belongsTo(Subscription::class);
-    }
-        public function workingHours()
+    public function workingHours()
     {
         return $this->hasMany(LabWorkingHour::class);
     }
-
 }

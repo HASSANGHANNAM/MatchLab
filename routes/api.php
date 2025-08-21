@@ -61,44 +61,53 @@ Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function 
 });
 
 // 'CorsMiddleware'
-Route::group(['middleware' => ['auth:sanctum']], function () {
-    // Route::get('/citySearch', [CityController::class, 'citySearch']);
-    Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
-    Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
-    Route::get('/labSearchSuperAdmin', [LabController::class, 'labSearchSuperAdmin']);
-    Route::get('/labById/{id}', [LabController::class, 'labById']);
-    Route::post('/patientPutDeleteFavoriteLab/{id}', [LabController::class, 'patientPutDeleteFavoriteLab']);
-    Route::get('/AnalysesSearchLabOwner', [AnalysController::class, 'AnalysesSearchLabOwner']);
-    Route::get('/AnalysesSearchLabOwnerNotInLab', [AnalysController::class, 'AnalysesSearchLabOwnerNotInLab']);
-    Route::get('/AnalysesSearchSuperAdmin', [AnalysController::class, 'AnalysesSearchSuperAdmin']);
-    Route::get('/AnalysesLabOwnerById/{id}', [AnalysController::class, 'AnalysesLabOwnerById']);
-    Route::get('/AnalysesSuperAdminById/{id}', [AnalysController::class, 'AnalysesSuperAdminById']);
-    Route::post('/addAnalysesToLab', [AnalysController::class, 'addAnalysesToLab']);
-    Route::delete('/deleteAnalysLabOwner/{id}', [AnalysController::class, 'deleteAnalysLabOwner']);
-    Route::post('/AddAdvertisement', [AdvertisementController::class, 'AddAdvertisement']);
-    Route::post('/deleteAdvertisement/{id}', [AdvertisementController::class, 'deleteAdvertisement']);
-    Route::get('/advertisementSearch', [AdvertisementController::class, 'advertisementSearch']);
-    Route::put('/advertisementUpdate/{id}', [AdvertisementController::class, 'advertisementUpdate']);
-    Route::post('/patientPutUpdateRateReveiw', [EvaluationController::class, 'patientPutUpdateRateReveiw']);
-    Route::delete('/deleteReview/{id}', [EvaluationController::class, 'deleteReview']);
-    Route::delete('/deleteRate/{id}', [EvaluationController::class, 'deleteRate']);
-    Route::get('/allEvaluation/{id}', [EvaluationController::class, 'allEvaluation']);
-    Route::get('/allEvaluationInmylab', [EvaluationController::class, 'allEvaluationInmylab']);
-    Route::post('/addPlan', [SubscriptionController::class, 'addPlan']);
-    Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
-    Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
-    Route::post('/schedules', [LabSchedulController::class, 'setLabSchedules']);
-    Route::get('/labs/{lab}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
-    Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
-    Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
-    Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
-    Route::post('/addresult', [addResultController::class, 'addResult']);
-    Route::get('/getBalance', [PaymentController::class, 'getBalance']);
-    Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
-    Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);
-    Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
-    Route::post('/depositBalanceToUser/{id}/{amount}', [PaymentController::class, 'depositBalanceToUser']);
-    Route::get('/getUsersWithRoles', [AuthController::class, 'getUsersWithRoles']);
-    Route::get('/labReport', [ReportController::class, 'labReport']);
-    Route::put('/updateGlobalUnitPrice/{price_of_global_unit}', [LabController::class, 'updateGlobalUnitPrice']);
-});
+Route::group(
+    ['middleware' => ['auth:sanctum']],
+    function () {
+        Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
+        Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
+    }
+
+);
+Route::group(
+    ['middleware' => ['auth:sanctum', 'CheckLabSubscription']],
+    function () {
+        Route::post('/addAnalysesToLab', [AnalysController::class, 'addAnalysesToLab']);
+        Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
+        Route::get('/labSearchPatient', [LabController::class, 'labSearchPatient']);
+        Route::get('/labSearchSuperAdmin', [LabController::class, 'labSearchSuperAdmin']);
+        Route::get('/labById/{id}', [LabController::class, 'labById']);
+        Route::post('/patientPutDeleteFavoriteLab/{id}', [LabController::class, 'patientPutDeleteFavoriteLab']);
+        Route::get('/AnalysesSearchLabOwner', [AnalysController::class, 'AnalysesSearchLabOwner']);
+        Route::get('/AnalysesSearchLabOwnerNotInLab', [AnalysController::class, 'AnalysesSearchLabOwnerNotInLab']);
+        Route::get('/AnalysesSearchSuperAdmin', [AnalysController::class, 'AnalysesSearchSuperAdmin']);
+        Route::get('/AnalysesLabOwnerById/{id}', [AnalysController::class, 'AnalysesLabOwnerById']);
+        Route::get('/AnalysesSuperAdminById/{id}', [AnalysController::class, 'AnalysesSuperAdminById']);
+        Route::delete('/deleteAnalysLabOwner/{id}', [AnalysController::class, 'deleteAnalysLabOwner']);
+        Route::post('/AddAdvertisement', [AdvertisementController::class, 'AddAdvertisement']);
+        Route::post('/deleteAdvertisement/{id}', [AdvertisementController::class, 'deleteAdvertisement']);
+        Route::get('/advertisementSearch', [AdvertisementController::class, 'advertisementSearch']);
+        Route::put('/advertisementUpdate/{id}', [AdvertisementController::class, 'advertisementUpdate']);
+        Route::post('/patientPutUpdateRateReveiw', [EvaluationController::class, 'patientPutUpdateRateReveiw']);
+        Route::delete('/deleteReview/{id}', [EvaluationController::class, 'deleteReview']);
+        Route::delete('/deleteRate/{id}', [EvaluationController::class, 'deleteRate']);
+        Route::get('/allEvaluation/{id}', [EvaluationController::class, 'allEvaluation']);
+        Route::get('/allEvaluationInmylab', [EvaluationController::class, 'allEvaluationInmylab']);
+        Route::post('/addPlan', [SubscriptionController::class, 'addPlan']);
+        Route::post('/schedules', [LabSchedulController::class, 'setLabSchedules']);
+        Route::get('/labs/{lab}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
+        Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
+        Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
+        Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
+        Route::post('/addresult', [addResultController::class, 'addResult']);
+        Route::get('/getBalance', [PaymentController::class, 'getBalance']);
+        Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
+        Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);
+        Route::post('/depositBalance/{amount}', [PaymentController::class, 'depositBalance']);
+        Route::post('/depositBalanceToUser/{id}/{amount}', [PaymentController::class, 'depositBalanceToUser']);
+        Route::get('/getUsersWithRoles', [AuthController::class, 'getUsersWithRoles']);
+        Route::get('/labReport', [ReportController::class, 'labReport']);
+        Route::put('/updateGlobalUnitPrice/{price_of_global_unit}', [LabController::class, 'updateGlobalUnitPrice']);
+    }
+
+);
