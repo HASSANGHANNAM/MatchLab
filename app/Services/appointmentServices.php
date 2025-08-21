@@ -133,7 +133,6 @@ class appointmentServices
                         'user' => null
                        ];
             }
-
             $startHour = $appointmentDateTime->copy()->startOfHour();
             $endHour = $appointmentDateTime->copy()->addHour();
             $appointmentsCount = Appointment::where('lab_id', $labId)

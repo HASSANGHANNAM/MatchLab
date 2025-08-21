@@ -48,7 +48,7 @@ class LabSchedulController extends Controller
     {
         try {
             $appointment = $this->appointmentServices->bookAppointment($request->validated());
-            return Response::success($appointment['data'], $appointment['message']);
+            return Response::success($appointment['user'], $appointment['message']);
         } catch (Throwable $th) {
             return Response::error([], $th->getMessage());
         }
