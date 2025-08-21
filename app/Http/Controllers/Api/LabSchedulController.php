@@ -48,7 +48,7 @@ class LabSchedulController extends Controller
     {
         try {
             $appointment = $this->appointmentServices->bookAppointment($request->validated());
-            return Response::success($appointment['user'], $appointment['message']);
+            return Response::success($appointment['data'], $appointment['message']);
         } catch (Throwable $th) {
             return Response::error([], $th->getMessage());
         }
@@ -79,4 +79,37 @@ class LabSchedulController extends Controller
             return Response::error([], 'حدث خطأ غير متوقع: ' . $e->getMessage(), 500);
         }
     }
+            public function updateAppointment($appointmentId, BookAppointmentRequest $request): JsonResponse
+    {
+        try {
+            $appointmentId = (int) $appointmentId;
+            $data = $this->appointmentServices->updateAppointment($appointmentId, $request->validated());
+
+            return Response::success($data['data'], $data['message']);
+
+        } catch (Throwable $th) {
+            return Response::error([], 'حدث خطأ غير متوقع: ' . $th->getMessage(), 500);
+        }
+    }
+
+            public function deleteAppointment($appointmentId): JsonResponse
+    {
+        try {
+            $appointmentId = (int) $appointmentId;
+            $data = $this->appointmentServices->deleteAppointment($appointmentId);
+
+
+        if ($data['status'] === 1) {
+            return Response::success($data['data'], $data['message']);
+        }
+
+        return Response::error($data['data'], $data['message']);
+
+        } catch (Throwable $th) {
+            return Response::error([], 'حدث خطأ غير متوقع: ' . $th->getMessage(), 500);
+        }
+    }
+
+
+
 }

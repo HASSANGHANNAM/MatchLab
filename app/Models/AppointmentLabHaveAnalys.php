@@ -14,7 +14,7 @@ class AppointmentLabHaveAnalys extends Model
     public $timestamps = true;
     public function lab_have_analyses()
     {
-        return $this->belongsTo(lab_have_analyses::class);
+        return $this->belongsTo(lab_have_analyses::class,'lab_have_analys_id','id');
     }
     public function appointment()
     {

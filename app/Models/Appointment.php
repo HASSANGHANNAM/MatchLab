@@ -24,4 +24,15 @@ class Appointment extends Model
     {
         return $this->belongsTo(Location::class);
     }
+        public function appointmentLabHaveAnalys()
+    {
+        return $this->hasMany(AppointmentLabHaveAnalys::class, 'appointment_id');
+    }
+        public function analyses()
+    {
+        return $this->hasMany(AppointmentLabHaveAnalys::class, 'appointment_id');
+    }
+
+
+
 }
