@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Throwable;
 
+use function PHPUnit\Framework\isEmpty;
+
 class LabSchedulController extends Controller
 {
     private appointmentServices $appointmentServices;
@@ -28,18 +30,22 @@ class LabSchedulController extends Controller
     {
         try {
             $data = $this->appointmentServices->setLabSchedules($request->validated()['schedules']);
-            return Response::success($data['data'], $data['message'],$data['code']);
+            return Response::success($data['data'], $data['message'], $data['code']);
         } catch (Throwable $th) {
             $message = $th->getMessage();
             return Response::Error([], $message);
         }
     }
 
-    public function getAvailableAppointments(Lab $lab): JsonResponse
+    public function getAvailableAppointments($lab_id): JsonResponse
     {
         try {
-            $slots = $this->appointmentServices->getAvailableAppointments($lab->id);
-            return Response::success($slots, 'المواعيد المتاحة للمختبر');
+            $slots = $this->appointmentServices->getAvailableAppointments($lab_id);
+            if (empty($slots)) {
+                return Response::Success([], 'المخبر غير موجود', 403);
+            } else {
+                return Response::success($slots, 'المواعيد المتاحة للمختبر');
+            }
         } catch (Throwable $th) {
             return Response::error([], $th->getMessage());
         }
@@ -79,37 +85,32 @@ class LabSchedulController extends Controller
             return Response::error([], 'حدث خطأ غير متوقع: ' . $e->getMessage(), 500);
         }
     }
-            public function updateAppointment($appointmentId, BookAppointmentRequest $request): JsonResponse
+    public function updateAppointment($appointmentId, BookAppointmentRequest $request): JsonResponse
     {
         try {
             $appointmentId = (int) $appointmentId;
             $data = $this->appointmentServices->updateAppointment($appointmentId, $request->validated());
 
             return Response::success($data['data'], $data['message']);
-
         } catch (Throwable $th) {
             return Response::error([], 'حدث خطأ غير متوقع: ' . $th->getMessage(), 500);
         }
     }
 
-            public function deleteAppointment($appointmentId): JsonResponse
+    public function deleteAppointment($appointmentId): JsonResponse
     {
         try {
             $appointmentId = (int) $appointmentId;
             $data = $this->appointmentServices->deleteAppointment($appointmentId);
 
 
-        if ($data['status'] === 1) {
-            return Response::success($data['data'], $data['message']);
-        }
+            if ($data['status'] === 1) {
+                return Response::success($data['data'], $data['message']);
+            }
 
-        return Response::error($data['data'], $data['message']);
-
+            return Response::error($data['data'], $data['message']);
         } catch (Throwable $th) {
             return Response::error([], 'حدث خطأ غير متوقع: ' . $th->getMessage(), 500);
         }
     }
-
-
-
 }

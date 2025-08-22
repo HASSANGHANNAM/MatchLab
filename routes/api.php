@@ -97,7 +97,7 @@ Route::group(
         Route::get('/allEvaluationInmylab', [EvaluationController::class, 'allEvaluationInmylab']);
         Route::post('/addPlan', [SubscriptionController::class, 'addPlan']);
         Route::post('/schedules', [LabSchedulController::class, 'setLabSchedules']);
-        Route::get('/labs/{lab}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
+        Route::get('/labs/{lab_id}/available-appointments', [LabSchedulController::class, 'getAvailableAppointments']);
         Route::post('/bookAppointment', [LabSchedulController::class, 'bookAppointment']);
         Route::get('/allappointments', [LabSchedulController::class, 'getLabAppointments']);
         Route::put('/appointments/{appointmentId}/status', [LabSchedulController::class, 'updateAppointmentStatus']);
@@ -106,6 +106,7 @@ Route::group(
         Route::post('/addresult', [addResultController::class, 'addResult']);
         Route::get('/labArchive', [ArchiveController::class, 'labArchive']);
         Route::get('/patientArchive/{patientId}', [ArchiveController::class, 'patientArchive']);
+        Route::get('/getPatientsArchiveInMyLab', [ArchiveController::class, 'getPatientsArchiveInMyLab']);
         Route::get('/getBalance', [PaymentController::class, 'getBalance']);
         Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
         Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);

@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\lab_have_analyses;
 use App\Models\abAnalysis;
 use App\Models\AppointmentLabHaveAnalys;
+use App\Models\Lab;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -54,8 +55,12 @@ class appointmentServices
 
     public function getAvailableAppointments(int $labId): array
     {
-        $now = Carbon::now();
+        $lab = Lab::find($labId);
+        if ($lab == null) {
+            return [];
+        }
         $availableSlots = [];
+        $now = Carbon::now();
         $days = 3;
 
         $workingHours = LabWorkingHour::where('lab_id', $labId)->get();
@@ -254,6 +259,7 @@ class appointmentServices
 
         return DB::transaction(function () use ($appointment, $data, $patientId) {
             $labId = $data['lab_id'] ?? $appointment->lab_id;
+            $lab = DB::table('labs')->where('id', $labId)->first();
             $appointmentDateTime = isset($data['date_time']) ? Carbon::parse($data['date_time']) : $appointment->date_time;
             if ($appointmentDateTime->lt(now())) {
                 return [
@@ -294,7 +300,7 @@ class appointmentServices
                     'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.'
                 ];
             }
-
+            $price = 0;
             if (!empty($data['analyses']) && is_array($data['analyses'])) {
                 foreach ($data['analyses'] as $analysisId) {
                     $exists = lab_have_analyses::where('lab_id', $labId)
@@ -307,9 +313,29 @@ class appointmentServices
                             'message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر."
                         ];
                     }
+                    $analysis =  DB::table('lab_analyses')->where('id', $analysisId)->first();
+                    $price += $analysis->global_price * $lab->price_of_global_unit;
                 }
             }
 
+            // start stripe
+            $user =  DB::table('users')->where('id', Auth::id())->first();
+            $labUser = DB::table('lab_owners')
+                ->where('lab_owners.lab_id', $labId)
+                ->join('users', 'users.id', '=', 'lab_owners.user_id')
+                ->select('users.*')
+                ->first();
+            $pricenew = $price - $appointment->total_Price;
+            if ($pricenew != 0) {
+                if ($pricenew < 0)
+                    $payment = $this->stripeService->transactionAmount($labUser->stripe_account_id, $user->stripe_account_id, $pricenew);
+                else
+                    $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $labUser->stripe_account_id, $pricenew);
+                if ($payment['code'] != 200) {
+                    return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
+                }
+            }
+            // end stripe 
             $appointment->update([
                 'type' => $data['type'] ?? $appointment->type,
                 'patient_name' => $data['patient_name'] ?? $appointment->patient_name,
@@ -317,6 +343,7 @@ class appointmentServices
                 'patient_id_number' => $data['patient_id_number'] ?? $appointment->patient_id_number,
                 'patient_id' => $patientId,
                 'lab_id' => $labId,
+                'total_Price' => $pricenew,
                 'location_id' => $data['location_id'] ?? $appointment->location_id,
                 'date_time' => $appointmentDateTime,
             ]);
@@ -381,6 +408,23 @@ class appointmentServices
             ];
         }
 
+        $labId = $data['lab_id'] ?? $appointment->lab_id;
+        // start stripe
+        $user =  DB::table('users')->where('id', Auth::id())->first();
+        $labUser = DB::table('lab_owners')
+            ->where('lab_owners.lab_id', $labId)
+            ->join('users', 'users.id', '=', 'lab_owners.user_id')
+            ->select('users.*')
+            ->first();
+        $now = Carbon::now();
+        $diffInHours = $now->diffInHours($appointment->date_time, false);
+        if ($diffInHours > 12) {
+            $payment = $this->stripeService->transactionAmount($labUser->stripe_account_id, $user->stripe_account_id, $appointment->total_Price);
+            if ($payment['code'] != 200) {
+                return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
+            }
+        }
+        // end stripe 
         $appointment->delete();
 
         return [

@@ -11,7 +11,7 @@ use Throwable;
 
 class ArchiveController extends Controller
 {
-        protected ArchiveService $archiveService;
+    protected ArchiveService $archiveService;
 
     public function __construct(ArchiveService $archiveService)
     {
@@ -37,5 +37,13 @@ class ArchiveController extends Controller
             return Response::Error([], $th->getMessage());
         }
     }
-
+    public function getPatientsArchiveInMyLab(): JsonResponse
+    {
+        try {
+            $data = $this->archiveService->getPatientsArchiveInMyLab();
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            return Response::Error([], $th->getMessage());
+        }
+    }
 }
