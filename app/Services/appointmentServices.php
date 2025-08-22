@@ -91,31 +91,15 @@ class appointmentServices
 
     public function bookAppointment(array $data): array
     {
-        $user = auth()->user();
-                if (!Auth::user() || !Auth::user()->hasRole('Patient')) {
-            return ['message' => 'غير مصرح لك بحجز الموعد.',
-                      'data' => null
-                    ];
-        }
-        $patientId = $user->patient->id;
-        if (!$patientId) {
+        if (!Auth::user() || !Auth::user()->hasRole('Patient')) {
             return [
-                'status' => 0,
-                'user' => null,
-                'message' => 'لا يوجد سجل مريض مرتبط بهذا المستخدم.'
+                'message' => 'غير مصرح لك بحجز الموعد.',
+                'user' => null
             ];
         }
-
-        return DB::transaction(function () use ($data,$patientId) {
+        return DB::transaction(function () use ($data) {
             $labId = $data['lab_id'];
             $appointmentDateTime = Carbon::parse($data['date_time']);
-             if ($appointmentDateTime->lt(now())) {
-            return [
-                'status' => 0,
-                'user' => null,
-                'message' => 'لا يمكن حجز موعد بتاريخ مضى.'
-            ];
-        }
             $dayOfWeek = $appointmentDateTime->format('l');
             $appointmentTime = $appointmentDateTime->format('H:i:s');
             $patient = DB::table('patients')
@@ -129,21 +113,23 @@ class appointmentServices
                 ->where('end_time', '>', $appointmentTime)
                 ->first();
             if (!$workingHour) {
-                return ['message' => 'هذا الوقت خارج أوقات عمل المختبر.',
-                        'user' => null
-                       ];
+                return [
+                    'message' => 'هذا الوقت خارج أوقات عمل المختبر.',
+                    'user' => null
+                ];
             }
+
             $startHour = $appointmentDateTime->copy()->startOfHour();
             $endHour = $appointmentDateTime->copy()->addHour();
             $appointmentsCount = Appointment::where('lab_id', $labId)
                 ->whereBetween('date_time', [$startHour, $endHour])
                 ->count();
             if ($appointmentsCount >= $workingHour->patients_per_hour) {
-                return ['message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.', 'data' => null];
+                return ['message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.', 'user' => null];
             }
 
             if (empty($data['analyses']) || !is_array($data['analyses'])) {
-                return ['message' => 'يجب اختيار التحاليل المطلوبة.', 'data' => null];
+                return ['message' => 'يجب اختيار التحاليل المطلوبة.', 'user' => null];
             }
             $price = 0;
             foreach ($data['analyses'] as $analysisId) {
@@ -167,13 +153,13 @@ class appointmentServices
             if ($payment['code'] != 200) {
                 return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
             }
-            // end stripe
+            // end stripe 
             $appointment = Appointment::create([
                 'type' => $data['type'],
                 'patient_name' => $data['patient_name'],
                 'patient_phone' => $data['patient_phone'],
                 'patient_id_number' => $data['patient_id_number'],
-                'patient_id' => $patientId,
+                'patient_id' => $data['patient_id'],
                 'lab_id' => $labId,
                 'location_id' => $data['location_id'] ?? null,
                 'status' => 'pending',
@@ -232,135 +218,135 @@ class appointmentServices
             'code' => 200,
         ];
     }
-public function updateAppointment(int $appointmentId, array $data): array
-{
-    $user = auth()->user();
+    public function updateAppointment(int $appointmentId, array $data): array
+    {
+        $user = auth()->user();
 
-    if (!$user || !$user->hasRole('Patient')) {
-        return [
-            'status' => 0,
-            'data' => null,
-            'message' => 'غير مصرح لك بتحديث الموعد.'
-        ];
-    }
-
-
-    $patientId = $user->patient->id;
-    if (!$patientId) {
-        return [
-            'status' => 0,
-            'data' => null,
-            'message' => 'لا يوجد سجل مريض مرتبط بهذا المستخدم.'
-        ];
-    }
-
-    $appointment = Appointment::where('id', $appointmentId)
-        ->where('patient_id', $patientId)
-        ->first();
-
-    if (!$appointment) {
-        return [
-            'status' => 0,
-            'data' => null,
-            'message' => 'الموعد غير موجود.'
-        ];
-    }
-
-    return DB::transaction(function () use ($appointment, $data, $patientId) {
-        $labId = $data['lab_id'] ?? $appointment->lab_id;
-        $appointmentDateTime = isset($data['date_time']) ? Carbon::parse($data['date_time']) : $appointment->date_time;
-            if ($appointmentDateTime->lt(now())) {
+        if (!$user || !$user->hasRole('Patient')) {
             return [
                 'status' => 0,
                 'data' => null,
-                'message' => 'لا يمكن حجز موعد بتاريخ مضى.'
+                'message' => 'غير مصرح لك بتحديث الموعد.'
             ];
         }
-        $dayOfWeek = $appointmentDateTime->format('l');
-        $appointmentTime = $appointmentDateTime->format('H:i:s');
 
 
-        $workingHour = LabWorkingHour::where('lab_id', $labId)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('start_time', '<=', $appointmentTime)
-            ->where('end_time', '>', $appointmentTime)
+        $patientId = $user->patient->id;
+        if (!$patientId) {
+            return [
+                'status' => 0,
+                'data' => null,
+                'message' => 'لا يوجد سجل مريض مرتبط بهذا المستخدم.'
+            ];
+        }
+
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('patient_id', $patientId)
             ->first();
 
-        if (!$workingHour) {
+        if (!$appointment) {
             return [
                 'status' => 0,
                 'data' => null,
-                'message' => 'هذا الوقت خارج أوقات عمل المختبر.'
+                'message' => 'الموعد غير موجود.'
             ];
         }
 
-        $startHour = $appointmentDateTime->copy()->startOfHour();
-        $endHour = $appointmentDateTime->copy()->addHour();
-        $appointmentsCount = Appointment::where('lab_id', $labId)
-            ->whereBetween('date_time', [$startHour, $endHour])
-            ->where('id', '!=', $appointment->id)
-            ->count();
+        return DB::transaction(function () use ($appointment, $data, $patientId) {
+            $labId = $data['lab_id'] ?? $appointment->lab_id;
+            $appointmentDateTime = isset($data['date_time']) ? Carbon::parse($data['date_time']) : $appointment->date_time;
+            if ($appointmentDateTime->lt(now())) {
+                return [
+                    'status' => 0,
+                    'data' => null,
+                    'message' => 'لا يمكن حجز موعد بتاريخ مضى.'
+                ];
+            }
+            $dayOfWeek = $appointmentDateTime->format('l');
+            $appointmentTime = $appointmentDateTime->format('H:i:s');
 
-        if ($appointmentsCount >= $workingHour->patients_per_hour) {
-            return [
-                'status' => 0,
-                'data' => null,
-                'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.'
-            ];
-        }
 
-        if (!empty($data['analyses']) && is_array($data['analyses'])) {
-            foreach ($data['analyses'] as $analysisId) {
-                $exists = lab_have_analyses::where('lab_id', $labId)
-                    ->where('lab_analys_id', $analysisId)
-                    ->exists();
-                if (!$exists) {
-                    return [
-                        'status' => 0,
-                        'data' => null,
-                        'message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر."
-                    ];
+            $workingHour = LabWorkingHour::where('lab_id', $labId)
+                ->where('day_of_week', $dayOfWeek)
+                ->where('start_time', '<=', $appointmentTime)
+                ->where('end_time', '>', $appointmentTime)
+                ->first();
+
+            if (!$workingHour) {
+                return [
+                    'status' => 0,
+                    'data' => null,
+                    'message' => 'هذا الوقت خارج أوقات عمل المختبر.'
+                ];
+            }
+
+            $startHour = $appointmentDateTime->copy()->startOfHour();
+            $endHour = $appointmentDateTime->copy()->addHour();
+            $appointmentsCount = Appointment::where('lab_id', $labId)
+                ->whereBetween('date_time', [$startHour, $endHour])
+                ->where('id', '!=', $appointment->id)
+                ->count();
+
+            if ($appointmentsCount >= $workingHour->patients_per_hour) {
+                return [
+                    'status' => 0,
+                    'data' => null,
+                    'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.'
+                ];
+            }
+
+            if (!empty($data['analyses']) && is_array($data['analyses'])) {
+                foreach ($data['analyses'] as $analysisId) {
+                    $exists = lab_have_analyses::where('lab_id', $labId)
+                        ->where('lab_analys_id', $analysisId)
+                        ->exists();
+                    if (!$exists) {
+                        return [
+                            'status' => 0,
+                            'data' => null,
+                            'message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر."
+                        ];
+                    }
                 }
             }
-        }
 
-        $appointment->update([
-            'type' => $data['type'] ?? $appointment->type,
-            'patient_name' => $data['patient_name'] ?? $appointment->patient_name,
-            'patient_phone' => $data['patient_phone'] ?? $appointment->patient_phone,
-            'patient_id_number' => $data['patient_id_number'] ?? $appointment->patient_id_number,
-            'patient_id' => $patientId,
-            'lab_id' => $labId,
-            'location_id' => $data['location_id'] ?? $appointment->location_id,
-            'date_time' => $appointmentDateTime,
-        ]);
-
-
-        if (!empty($data['analyses']) && is_array($data['analyses'])) {
-
-            AppointmentLabHaveAnalys::where('appointment_id', $appointment->id)->delete();
+            $appointment->update([
+                'type' => $data['type'] ?? $appointment->type,
+                'patient_name' => $data['patient_name'] ?? $appointment->patient_name,
+                'patient_phone' => $data['patient_phone'] ?? $appointment->patient_phone,
+                'patient_id_number' => $data['patient_id_number'] ?? $appointment->patient_id_number,
+                'patient_id' => $patientId,
+                'lab_id' => $labId,
+                'location_id' => $data['location_id'] ?? $appointment->location_id,
+                'date_time' => $appointmentDateTime,
+            ]);
 
 
-            foreach ($data['analyses'] as $analysisId) {
-                $labHaveAnalysis = lab_have_analyses::where('lab_id', $labId)
-                    ->where('lab_analys_id', $analysisId)
-                    ->first();
+            if (!empty($data['analyses']) && is_array($data['analyses'])) {
 
-                AppointmentLabHaveAnalys::create([
-                    'appointment_id' => $appointment->id,
-                    'lab_have_analys_id' => $labHaveAnalysis->id,
-                    'result' => null
-                ]);
+                AppointmentLabHaveAnalys::where('appointment_id', $appointment->id)->delete();
+
+
+                foreach ($data['analyses'] as $analysisId) {
+                    $labHaveAnalysis = lab_have_analyses::where('lab_id', $labId)
+                        ->where('lab_analys_id', $analysisId)
+                        ->first();
+
+                    AppointmentLabHaveAnalys::create([
+                        'appointment_id' => $appointment->id,
+                        'lab_have_analys_id' => $labHaveAnalysis->id,
+                        'result' => null
+                    ]);
+                }
             }
-        }
 
-        return [
-            'status' => 1,
-            'data' => $appointment->load('lab', 'location'),
-            'message' => 'تم تحديث الموعد بنجاح!'
-        ];
-    });
-}
+            return [
+                'status' => 1,
+                'data' => $appointment->load('lab', 'location'),
+                'message' => 'تم تحديث الموعد بنجاح!'
+            ];
+        });
+    }
 
 
     public function deleteAppointment(int $appointmentId): array
@@ -403,13 +389,4 @@ public function updateAppointment(int $appointmentId, array $data): array
             'message' => 'تم حذف الموعد بنجاح.'
         ];
     }
-
-
-
-
-
-
-
-
 }
-
