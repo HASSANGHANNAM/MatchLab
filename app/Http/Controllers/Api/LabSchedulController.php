@@ -43,6 +43,9 @@ class LabSchedulController extends Controller
             $slots = $this->appointmentServices->getAvailableAppointments($lab_id);
             if (empty($slots)) {
                 return Response::Success([], 'المخبر غير موجود', 403);
+            } elseif ($slots == ["dont have"]) {
+
+                return Response::success([], 'المواعيد المتاحة للمختبر');
             } else {
                 return Response::success($slots, 'المواعيد المتاحة للمختبر');
             }

@@ -91,6 +91,8 @@ class appointmentServices
                 }
             }
         }
+        if (empty($availableSlots))
+            return ["dont have"];
         return $availableSlots;
     }
 
