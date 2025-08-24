@@ -107,6 +107,8 @@ Route::group(
         Route::get('/labArchive', [ArchiveController::class, 'labArchive']);
         Route::get('/patientArchive/{patientId}', [ArchiveController::class, 'patientArchive']);
         Route::get('/getPatientsArchiveInMyLab', [ArchiveController::class, 'getPatientsArchiveInMyLab']);
+        Route::get('/myBokings', [ArchiveController::class, 'myBookings']);
+        Route::get('/appointmentTestsResult/{appointmentId}', [ArchiveController::class, 'appointmentTests']);
         Route::get('/getBalance', [PaymentController::class, 'getBalance']);
         Route::get('/getPlatformBalance', [PaymentController::class, 'getPlatformBalance']);
         Route::post('/withdrawBalance/{amount}', [PaymentController::class, 'withdrawBalance']);

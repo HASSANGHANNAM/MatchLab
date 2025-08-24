@@ -10,6 +10,7 @@ use App\Models\Appointment;
 use App\Http\Responses\Response;
 use App\Http\Requests\LabWorkingHourRequest;
 use App\Http\Requests\UpdateAppointmentStatusRequest;
+use App\Http\Requests\updateAppointmentRequest;
 use App\Http\Requests\BookAppointmentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -88,7 +89,7 @@ class LabSchedulController extends Controller
             return Response::error([], 'حدث خطأ غير متوقع: ' . $e->getMessage(), 500);
         }
     }
-    public function updateAppointment($appointmentId, BookAppointmentRequest $request): JsonResponse
+    public function updateAppointment($appointmentId, updateAppointmentRequest $request): JsonResponse
     {
         try {
             $appointmentId = (int) $appointmentId;

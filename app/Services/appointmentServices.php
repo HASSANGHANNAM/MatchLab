@@ -160,7 +160,7 @@ class appointmentServices
             if ($payment['code'] != 200) {
                 return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
             }
-            // end stripe 
+            // end stripe
             $appointment = Appointment::create([
                 'type' => $data['type'],
                 'patient_name' => $data['patient_name'],
@@ -337,7 +337,7 @@ class appointmentServices
                     return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
                 }
             }
-            // end stripe 
+            // end stripe
             $appointment->update([
                 'type' => $data['type'] ?? $appointment->type,
                 'patient_name' => $data['patient_name'] ?? $appointment->patient_name,
@@ -426,7 +426,7 @@ class appointmentServices
                 return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
             }
         }
-        // end stripe 
+        // end stripe
         $appointment->delete();
 
         return [

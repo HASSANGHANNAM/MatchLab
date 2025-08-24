@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class BookAppointmentRequest extends FormRequest
+class updateAppointmentRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,14 +22,14 @@ class BookAppointmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => 'required|string|max:255',
-            'patient_name' => 'required|string|max:255',
-            'patient_phone' => 'required|string|max:20',
-            'patient_id_number' => 'required|string|max:50',
-            'lab_id' => 'required|integer|exists:labs,id',
+            'type' => 'string|max:255',
+            'patient_name' => 'string|max:255',
+            'patient_phone' => 'string|max:20',
+            'patient_id_number' => 'string|max:50',
+            'lab_id' => 'integer|exists:labs,id',
             'location_id' => 'nullable|integer|exists:locations,id',
-            'date_time' => 'required|date_format:Y-m-d H:i:s',
-            'analyses' => 'required|array|min:1',
+            'date_time' => 'date_format:Y-m-d H:i:s',
+            'analyses' => 'array|min:1',
             'analyses.*' => 'integer|exists:lab_analyses,id'
         ];
     }

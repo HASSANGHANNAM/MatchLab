@@ -140,4 +140,128 @@ class ArchiveService
         }
         return ['message' => $message, 'user' => $users];
     }
+
+        /**
+     * 1) سجل الحجوزات (اسم المختبر + وقت الحجز فقط)
+     */
+    public function getMyBookings(): array
+    {
+        $patientId = Auth::user()->patient->id ?? null;
+
+        if (!$patientId) {
+            return [
+                'data' => [],
+                'message' => 'هذا المستخدم ليس مريضاً مسجلاً.'
+            ];
+        }
+
+        $appointments = Appointment::where('patient_id', $patientId)
+            ->with('lab:id,lab_name')
+            ->orderByDesc('date_time')
+            ->get();
+
+        $data = $appointments->map(function ($appt) {
+            return [
+                'appointment_id' => $appt->id,
+                'lab_name'       => $appt->lab?->lab_name,
+                'date_time'      => $appt->date_time,
+            ];
+        });
+
+        return [
+            'data' => $data,
+            'message' => 'تم جلب سجل الحجوزات بنجاح',
+        ];
+    }
+
+    /**
+     * 2) الفحوصات الخاصة بحجز محدد
+     */
+    public function getAppointmentTests(int $appointmentId): array
+    {
+        $patientId = Auth::user()->patient->id ?? null;
+
+        if (!$patientId) {
+            return [
+                'data' => [],
+                'message' => 'هذا المستخدم ليس مريضاً مسجلاً.'
+            ];
+        }
+
+
+        $appointment = Appointment::where('id', $appointmentId)
+            ->where('patient_id', $patientId)
+            ->with('appointmentLabHaveAnalys.lab_have_analyses.labAnalysis')
+            ->first();
+
+            if (!$appointment) {
+            return [
+                'data' => [],
+                'message' => 'لا يوجد تحليل'
+            ];
+        }
+
+        $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) {
+            $labAnalysis = $row->lab_have_analyses->labAnalysis ?? null;
+
+            return [
+                'analysis_id'   => $labAnalysis?->id,
+                'analysis_name' => $labAnalysis?->lab_analyses_name,
+                'result'        => $row->result,
+            ];
+        });
+
+        return [
+            'data' => $tests,
+            'message' => 'تم جلب قائمة الفحوصات بنجاح',
+        ];
+    }
+
+
+    // public function getTestResult(int $appointmentId, int $analysisId): array
+    // {
+    //     $patientId = Auth::user()->patient->id ?? null;
+
+    //     if (!$patientId) {
+    //         return [
+    //             'data' => null,
+    //             'message' => 'هذا المستخدم ليس مريضاً مسجلاً.'
+    //         ];
+    //     }
+
+    //     $appointment = Appointment::where('id', $appointmentId)
+    //         ->where('patient_id', $patientId)
+    //         ->with('appointmentLabHaveAnalys.lab_have_analyses.labAnalysis')
+    //         ->firstOrFail();
+
+    //     $row = $appointment->appointmentLabHaveAnalys->first(function ($item) use ($analysisId) {
+    //         $labAnalysis = $item->lab_have_analyses->labAnalysis ?? null;
+    //         if (!$labAnalysis) return false;
+
+    //         // استخدام == بدلاً من === لتجنب مشاكل النوع
+    //         return $labAnalysis->id == $analysisId;
+    //     });
+
+
+    //     if (!$row) {
+    //         return [
+    //             'data' => null,
+    //             'message' => 'لم يتم العثور على الفحص المطلوب.'
+    //         ];
+    //     }
+
+    //     $labAnalysis = $row->lab_have_analyses->labAnalysis ?? null;
+
+    //     return [
+    //         'data' => [
+    //             'appointment_id' => $appointment->id,
+    //             'analysis_id'    => $labAnalysis?->id,
+    //             'analysis_name'  => $labAnalysis?->lab_analyses_name,
+    //             'result'         => $row->result,
+    //         ],
+    //         'message' => 'تم جلب نتيجة الفحص بنجاح',
+    //     ];
+    // }
+
+
 }

@@ -46,4 +46,36 @@ class ArchiveController extends Controller
             return Response::Error([], $th->getMessage());
         }
     }
+
+        public function myBookings(): JsonResponse
+    {
+        try {
+            $data = $this->archiveService->getMyBookings();
+            return Response::success($data['data'], $data['message']);
+        } catch (Throwable $th) {
+            return Response::Error([], $th->getMessage());
+        }
+    }
+
+    public function appointmentTests(int $appointmentId): JsonResponse
+    {
+        try {
+            $data = $this->archiveService->getAppointmentTests($appointmentId);
+            return Response::success($data['data'], $data['message']);
+        } catch (Throwable $th) {
+            return Response::Error([], $th->getMessage());
+        }
+    }
+
+    public function testResult(int $appointmentId, int $analysisId): JsonResponse
+    {
+        try {
+            $data = $this->archiveService->getTestResult($appointmentId, $analysisId);
+            return Response::success($data['data'], $data['message']);
+        } catch (Throwable $th) {
+            return Response::Error([], $th->getMessage());
+        }
+    }
+
+
 }
