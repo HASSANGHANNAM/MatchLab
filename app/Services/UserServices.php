@@ -196,12 +196,14 @@ class UserServices
                 $message = 'User login successfully';
                 $code = 200;
             }
+
         } else {
             $data = null;
             $message = 'User Email not found';
             $code = 404;
         }
-            if (is_null($user->email_verified_at)) {
+
+        if (is_null($user->email_verified_at)) {
         return [
             'user' => null,
             'message' => 'يجب تأكيد البريد الإلكتروني أولاً',
@@ -448,7 +450,7 @@ class UserServices
             'expires_at' => now()->addMinutes(10),
         ]);
 
-        
+
         Mail::raw("رمز التحقق الجديد الخاص بك هو: {$code}", function ($message) use ($user) {
             $message->to($user->email)
                     ->subject('رمز التحقق الجديد لحسابك');

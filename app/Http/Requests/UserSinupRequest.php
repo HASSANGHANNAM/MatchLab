@@ -28,7 +28,6 @@ class UserSinupRequest extends FormRequest
 
         return [
 
-            // 'name' => 'required|string|min:4',
             'first_name' => 'required|string|min:4',
             'last_name' => 'required|string|min:4',
             'email' => 'required|email|unique:users,email',
