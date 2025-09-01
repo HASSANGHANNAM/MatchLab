@@ -63,19 +63,19 @@ class UserServices
             $user = $this->appendRolesAndPermissions($user);
 
             // stripe
-            // $patientStripeAccount = $this->stripeService->createStripeAccount(
-            //     $request['email'],
-            //     $request['first_name'],
-            //     $request['last_name']
-            // );
-            // if ($patientStripeAccount['code'] == 200) {
-            //     DB::table('users')->where('id', $user->id)->update(['stripe_account_id' => $patientStripeAccount['data']['Account_id']]);
-            //     $user->stripe_account_id = $patientStripeAccount['data']['Account_id'];
-            // } else {
-            //     DB::rollBack();
-            //     $message = 'Patient user created fail! because stripe account do not created ';
-            //     return ['user' => null, 'message' => $message];
-            // }
+            $patientStripeAccount = $this->stripeService->createStripeAccount(
+                $request['email'],
+                $request['first_name'],
+                $request['last_name']
+            );
+            if ($patientStripeAccount['code'] == 200) {
+                DB::table('users')->where('id', $user->id)->update(['stripe_account_id' => $patientStripeAccount['data']['Account_id']]);
+                $user->stripe_account_id = $patientStripeAccount['data']['Account_id'];
+            } else {
+                DB::rollBack();
+                $message = 'Patient user created fail! because stripe account do not created ';
+                return ['user' => null, 'message' => $message];
+            }
             //strip end
             $user['token'] = $user->createToken("token")->plainTextToken;
             $data['token'] = $user['token'];
