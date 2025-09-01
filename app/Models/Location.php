@@ -10,7 +10,7 @@ class Location extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "locations";
-    protected $fillable = ['address', 'city_id'];
+    protected $fillable = ['address', 'city_id', 'longitude', 'latitude'];
     public $timestamps = true;
     public function city()
     {

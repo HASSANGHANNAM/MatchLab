@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('lab_have__plans', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('plan_id')->unique();
+            $table->unsignedBigInteger('plan_id');
             $table->foreign('plan_id')->references('id')->on('plans')->onDelete('cascade');
             $table->unsignedBigInteger('lab_id');
             $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');

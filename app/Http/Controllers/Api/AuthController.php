@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\UserSinupRequest;
 use App\Http\Requests\UserSininRequest;
-use App\Http\Requests\VerifyEmailRequest ;
+use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Requests\UserSinupLabOwnerRequest;
 use App\Http\Responses\Response;
 use App\Services\UserServices;
@@ -119,7 +119,7 @@ class AuthController extends Controller
             return Response::Error([], $message);
         }
     }
-        public function verifyEmail(VerifyEmailRequest $request): JsonResponse
+    public function verifyEmail(VerifyEmailRequest $request): JsonResponse
     {
         try {
             $user = User::where('email', $request->email)->first();
@@ -142,7 +142,7 @@ class AuthController extends Controller
         }
     }
 
-        public function resendVerification(Request $request): JsonResponse
+    public function resendVerification(Request $request): JsonResponse
     {
         $request->validate([
             'email' => 'required|email|exists:users,email',
@@ -155,5 +155,4 @@ class AuthController extends Controller
             return Response::Error([], $th->getMessage());
         }
     }
-
 }

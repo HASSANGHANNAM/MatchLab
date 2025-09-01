@@ -167,6 +167,8 @@ class appointmentServices
                 'patient_phone' => $data['patient_phone'],
                 'patient_id_number' => $data['patient_id_number'],
                 'patient_id' => $data['patient_id'],
+                'longitude' => $data['longitude'],
+                'latitude' => $data['latitude'],
                 'lab_id' => $labId,
                 'location_id' => $data['location_id'] ?? null,
                 'status' => 'pending',
@@ -185,7 +187,7 @@ class appointmentServices
                 ]);
             }
 
-            return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'location')];
+            return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'lab.location')];
         });
     }
 

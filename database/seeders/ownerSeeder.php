@@ -56,6 +56,8 @@ class ownerSeeder extends Seeder
                 'email' => "BaselAlrefaai@gmail.com",
                 'password' => Hash::make("12345678"),
                 'address' => "Altal",
+                'longitude' => "36.2912",
+                'latitude' => "33.5132", 
                 'city_id' => 2,
                 'lab_name' => "BaselAlrefaai",
                 'contact_info' => "0965654544",
@@ -71,6 +73,8 @@ class ownerSeeder extends Seeder
                 'email' => "GaithAboRashed@gmail.com",
                 'password' => Hash::make("12345678"),
                 'address' => "Alhamra street",
+                'longitude' => "36.2912",
+                'latitude' => "33.5132",
                 'city_id' => 1,
                 'lab_name' => "GaithAboRashed",
                 'contact_info' => "0934543566",
@@ -95,6 +99,8 @@ class ownerSeeder extends Seeder
             $user->givePermissionTo($permissions);
             $location = Location::query()->create([
                 'address' => $ow['address'],
+                'longitude' => $ow['longitude'],
+                'latitude' => $ow['latitude'],
                 'city_id' => $ow['city_id']
             ]);
             $lab = Lab::query()->create([

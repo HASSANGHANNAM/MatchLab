@@ -111,6 +111,8 @@ class UserServices
             $user->givePermissionTo($permissions);
             $location = Location::query()->create([
                 'address' => $request['address'] ?? null,
+                'longitude' => $request['longitude'] ?? null,
+                'latitude' => $request['latitude'] ?? null,
                 'city_id' => $request['city_id'] ?? null,
             ]);
             if (isset($request['image']) && $request['image'] instanceof \Illuminate\Http\UploadedFile) {
@@ -196,7 +198,6 @@ class UserServices
                 $message = 'User login successfully';
                 $code = 200;
             }
-
         } else {
             $data = null;
             $message = 'User Email not found';
@@ -204,12 +205,12 @@ class UserServices
         }
 
         if (is_null($user->email_verified_at)) {
-        return [
-            'user' => null,
-            'message' => 'يجب تأكيد البريد الإلكتروني أولاً',
-            'code' => 403
-        ];
-    }
+            return [
+                'user' => null,
+                'message' => 'يجب تأكيد البريد الإلكتروني أولاً',
+                'code' => 403
+            ];
+        }
 
 
         return ['user' => $data, 'message' => $message, 'code' => $code];
@@ -400,7 +401,7 @@ class UserServices
         }
     }
 
-        private function sendVerificationCode($user)
+    private function sendVerificationCode($user)
     {
         $code = rand(100000, 999999);
         EmailVerification::create([
@@ -411,11 +412,11 @@ class UserServices
 
         Mail::raw("كود التحقق الخاص بك هو: {$code}", function ($message) use ($user) {
             $message->to($user->email)
-                    ->subject('رمز التحقق لحسابك');
+                ->subject('رمز التحقق لحسابك');
         });
     }
 
-        public function resendVerificationCode($email)
+    public function resendVerificationCode($email)
     {
         $user = User::where('email', $email)->first();
 
@@ -453,12 +454,9 @@ class UserServices
 
         Mail::raw("رمز التحقق الجديد الخاص بك هو: {$code}", function ($message) use ($user) {
             $message->to($user->email)
-                    ->subject('رمز التحقق الجديد لحسابك');
+                ->subject('رمز التحقق الجديد لحسابك');
         });
 
         return 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني';
     }
-
-
-
 }

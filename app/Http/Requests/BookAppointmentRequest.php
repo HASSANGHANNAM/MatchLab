@@ -26,6 +26,8 @@ class BookAppointmentRequest extends FormRequest
             'patient_name' => 'required|string|max:255',
             'patient_phone' => 'required|string|max:20',
             'patient_id_number' => 'required|string|max:50',
+            'longitude' => '',
+            'latitude' => '',
             'lab_id' => 'required|integer|exists:labs,id',
             'location_id' => 'nullable|integer|exists:locations,id',
             'date_time' => 'required|date_format:Y-m-d H:i:s',

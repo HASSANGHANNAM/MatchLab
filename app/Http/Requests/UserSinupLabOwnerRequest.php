@@ -33,8 +33,11 @@ class UserSinupLabOwnerRequest extends FormRequest
             'lab_name' => 'required|string',
             'contact_info' => 'required|string',
             'city_id' => 'required',
-            'fcm_token'=>'string',
+            'fcm_token' => 'string',
+            'latitude' => 'required',
+            'longitude' => 'required',
             'address' => 'required|string',
+
             'image' => 'required|image|mimes:jpeg,png,jpg'
         ];
     }

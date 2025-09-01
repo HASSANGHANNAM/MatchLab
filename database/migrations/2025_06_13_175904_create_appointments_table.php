@@ -18,14 +18,16 @@ return new class extends Migration
             $table->string('patient_phone');
             $table->string('patient_id_number');
             $table->float('total_Price');
+            $table->double('longitude')->nullable();
+            $table->double('latitude')->nullable();
             $table->unsignedBigInteger('patient_id');
             $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
 
             $table->unsignedBigInteger('lab_id');
             $table->foreign('lab_id')->references('id')->on('labs')->onDelete('cascade');
 
-            $table->unsignedBigInteger('location_id')->nullable();
-            $table->foreign('location_id')->references('id')->on('locations')->onDelete('cascade');
+            // $table->unsignedBigInteger('location_id')->nullable();
+            // $table->foreign('location_id')->references('id')->on('locations')->onDelete('cascade');
             $table->enum("status", ["pending", "completed", "accepted",  "cancelled"])->nullable();
             $table->dateTime('date_time');
 

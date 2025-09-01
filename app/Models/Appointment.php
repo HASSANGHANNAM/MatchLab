@@ -10,7 +10,7 @@ class Appointment extends Model
     use HasFactory;
     //  use HasFactory, HasApiTokens;
     protected $table = "appointments";
-    protected $fillable = ['type', 'patient_name', 'patient_phone', 'patient_id_number', 'patient_id', 'lab_id', 'location_id', 'status', 'date_time', 'total_Price'];
+    protected $fillable = ['type', 'patient_name', 'patient_phone', 'patient_id_number', 'patient_id', 'lab_id', 'latitude', 'longitude', 'status', 'date_time', 'total_Price'];
     public $timestamps = true;
     public function patient()
     {
@@ -24,15 +24,12 @@ class Appointment extends Model
     {
         return $this->belongsTo(Location::class);
     }
-        public function appointmentLabHaveAnalys()
+    public function appointmentLabHaveAnalys()
     {
         return $this->hasMany(AppointmentLabHaveAnalys::class, 'appointment_id');
     }
-        public function analyses()
+    public function analyses()
     {
         return $this->hasMany(AppointmentLabHaveAnalys::class, 'appointment_id');
     }
-
-
-
 }
