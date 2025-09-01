@@ -199,7 +199,7 @@ class ArchiveService
                 'message' => 'لا يوجد تحليل'
             ];
         }
-
+            // $patientFullName = trim($patient->first_name . ' ' . $patient->last_name);
             $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) use ($patient) {
             $labAnalysis = $row->lab_have_analyses->labAnalysis ?? null;
             $range = $labAnalysis?->range;
@@ -244,8 +244,10 @@ class ArchiveService
                             }
                     }
 
+                $patientFullName = trim(Auth::user()->first_name . ' ' . Auth::user()->last_name);
 
                 return [
+                    'patient_name' => $patientFullName,
                     'analysis_id'   => $labAnalysis?->id,
                     'analysis_name' => $labAnalysis?->lab_analyses_name,
                     'result'        => $result,
