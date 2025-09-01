@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\UserSinupRequest;
 use App\Http\Requests\UserSininRequest;
+use App\Http\Requests\VerifyEmailRequest ;
 use App\Http\Requests\UserSinupLabOwnerRequest;
 use App\Http\Responses\Response;
 use App\Services\UserServices;
 use App\Http\Requests\Validator;
 use App\Models\Author;
 use App\Models\User;
+use App\Models\EmailVerification;
 use Illuminate\Http\jsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Events\Registered;
@@ -117,4 +119,41 @@ class AuthController extends Controller
             return Response::Error([], $message);
         }
     }
+        public function verifyEmail(VerifyEmailRequest $request): JsonResponse
+    {
+        try {
+            $user = User::where('email', $request->email)->first();
+            $verification = EmailVerification::where('user_id', $user->id)
+                ->where('code', $request->code)
+                ->where('is_verified', false)
+                ->where('expires_at', '>', now())
+                ->first();
+
+            if (!$verification) {
+                return Response::Error([], 'رمز التحقق غير صالح أو منتهي الصلاحية');
+            }
+
+            $verification->update(['is_verified' => true]);
+            $user->update(['email_verified_at' => now()]);
+
+            return Response::success([], 'تم تأكيد البريد الإلكتروني بنجاح');
+        } catch (\Throwable $th) {
+            return Response::Error([], $th->getMessage());
+        }
+    }
+
+        public function resendVerification(Request $request): JsonResponse
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        try {
+            $message = $this->userServices->resendVerificationCode($request->email);
+            return Response::success([], $message);
+        } catch (\Throwable $th) {
+            return Response::Error([], $th->getMessage());
+        }
+    }
+
 }

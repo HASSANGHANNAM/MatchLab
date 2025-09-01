@@ -9,10 +9,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\Patient;
+use App\Models\EmailVerification;
 use App\Models\LabOwner;
 use Carbon\Carbon;
 use App\Models\Location;
+use Illuminate\Support\Str;
 use App\Services\NotificationService;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Registered;
 
 
@@ -53,26 +56,26 @@ class UserServices
                 'Health_Problems' => $request['Health_Problems'] ?? null
             ]);
 
-            // event(new Registered($user));
+            $this->sendVerificationCode($user);
 
             $user->load('roles', 'permissions');
             $user = User::query()->find($user->id);
             $user = $this->appendRolesAndPermissions($user);
 
             // stripe
-            $patientStripeAccount = $this->stripeService->createStripeAccount(
-                $request['email'],
-                $request['first_name'],
-                $request['last_name']
-            );
-            if ($patientStripeAccount['code'] == 200) {
-                DB::table('users')->where('id', $user->id)->update(['stripe_account_id' => $patientStripeAccount['data']['Account_id']]);
-                $user->stripe_account_id = $patientStripeAccount['data']['Account_id'];
-            } else {
-                DB::rollBack();
-                $message = 'Patient user created fail! because stripe account do not created ';
-                return ['user' => null, 'message' => $message];
-            }
+            // $patientStripeAccount = $this->stripeService->createStripeAccount(
+            //     $request['email'],
+            //     $request['first_name'],
+            //     $request['last_name']
+            // );
+            // if ($patientStripeAccount['code'] == 200) {
+            //     DB::table('users')->where('id', $user->id)->update(['stripe_account_id' => $patientStripeAccount['data']['Account_id']]);
+            //     $user->stripe_account_id = $patientStripeAccount['data']['Account_id'];
+            // } else {
+            //     DB::rollBack();
+            //     $message = 'Patient user created fail! because stripe account do not created ';
+            //     return ['user' => null, 'message' => $message];
+            // }
             //strip end
             $user['token'] = $user->createToken("token")->plainTextToken;
             $data['token'] = $user['token'];
@@ -129,7 +132,8 @@ class UserServices
                 'user_id' => $user['id'] ?? null,
                 'lab_id' => $lab['id'] ?? null,
             ]);
-            // event(new Registered($user));
+            $this->sendVerificationCode($user);
+
             $user->load('roles', 'permissions');
             $user = User::query()->find($user->id);
             $user = $this->appendRolesAndPermissions($user);
@@ -197,6 +201,14 @@ class UserServices
             $message = 'User Email not found';
             $code = 404;
         }
+            if (is_null($user->email_verified_at)) {
+        return [
+            'user' => null,
+            'message' => 'يجب تأكيد البريد الإلكتروني أولاً',
+            'code' => 403
+        ];
+    }
+
 
         return ['user' => $data, 'message' => $message, 'code' => $code];
     }
@@ -385,4 +397,66 @@ class UserServices
             return ['data' => $data, 'message' => 'Unauthorized access!'];
         }
     }
+
+        private function sendVerificationCode($user)
+    {
+        $code = rand(100000, 999999);
+        EmailVerification::create([
+            'user_id' => $user->id,
+            'code' => $code,
+            'expires_at' => Carbon::now()->addMinutes(10),
+        ]);
+
+        Mail::raw("كود التحقق الخاص بك هو: {$code}", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('رمز التحقق لحسابك');
+        });
+    }
+
+        public function resendVerificationCode($email)
+    {
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            throw new \Exception('البريد الإلكتروني غير موجود');
+        }
+
+        if ($user->email_verified_at) {
+            throw new \Exception('تم تفعيل البريد الإلكتروني مسبقًا');
+        }
+
+
+        $lastCode = EmailVerification::where('user_id', $user->id)
+            ->where('is_verified', false)
+            ->latest()
+            ->first();
+
+        if ($lastCode && $lastCode->created_at->diffInSeconds(now()) < 60) {
+            throw new \Exception('يمكنك إعادة الإرسال بعد دقيقة واحدة فقط');
+        }
+
+
+        EmailVerification::where('user_id', $user->id)
+            ->where('is_verified', false)
+            ->delete();
+
+
+        $code = rand(100000, 999999);
+        EmailVerification::create([
+            'user_id' => $user->id,
+            'code' => $code,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        
+        Mail::raw("رمز التحقق الجديد الخاص بك هو: {$code}", function ($message) use ($user) {
+            $message->to($user->email)
+                    ->subject('رمز التحقق الجديد لحسابك');
+        });
+
+        return 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني';
+    }
+
+
+
 }

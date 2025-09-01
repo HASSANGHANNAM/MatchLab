@@ -141,12 +141,12 @@ class ArchiveService
         return ['message' => $message, 'user' => $users];
     }
 
-        /**
-     * 1) سجل الحجوزات (اسم المختبر + وقت الحجز فقط)
-     */
+
     public function getMyBookings(): array
     {
         $patientId = Auth::user()->patient->id ?? null;
+
+
 
         if (!$patientId) {
             return [
@@ -174,12 +174,11 @@ class ArchiveService
         ];
     }
 
-    /**
-     * 2) الفحوصات الخاصة بحجز محدد
-     */
+
     public function getAppointmentTests(int $appointmentId): array
     {
         $patientId = Auth::user()->patient->id ?? null;
+         $patient = Auth::user()->patient;
 
         if (!$patientId) {
             return [
@@ -191,7 +190,7 @@ class ArchiveService
 
         $appointment = Appointment::where('id', $appointmentId)
             ->where('patient_id', $patientId)
-            ->with('appointmentLabHaveAnalys.lab_have_analyses.labAnalysis')
+            ->with('appointmentLabHaveAnalys.lab_have_analyses.labAnalysis.range')
             ->first();
 
             if (!$appointment) {
@@ -201,15 +200,63 @@ class ArchiveService
             ];
         }
 
-        $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) {
+            $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) use ($patient) {
             $labAnalysis = $row->lab_have_analyses->labAnalysis ?? null;
+            $range = $labAnalysis?->range;
 
-            return [
-                'analysis_id'   => $labAnalysis?->id,
-                'analysis_name' => $labAnalysis?->lab_analyses_name,
-                'result'        => $row->result,
-            ];
-        });
+                    $result = $row->result;
+                    $min = null;
+                    $max = null;
+                    $unit = $range?->unit;
+                    $status = null;
+
+                    if ($range) {
+                        $age = $patient->dob ? Carbon::parse($patient->dob)->age : null;
+
+                        if ($age !== null) {
+                            if ($age <= 1) {
+                                $min = $range->newborns_min;
+                                $max = $range->newborns_max;
+                            } elseif ($age <= 12) {
+                                $min = $range->children_min;
+                                $max = $range->children_max;
+                            } elseif ($age > 12 && $age < 60) {
+                                if ($patient->gender === 'male') {
+                                    $min = $range->men_min;
+                                    $max = $range->men_max;
+                                } else {
+                                    $min = $range->women_min;
+                                    $max = $range->women_max;
+                                }
+                            } else {
+                                $min = $range->adults_min;
+                                $max = $range->adults_max;
+                            }
+                        }
+                            if ($result !== null && $min !== null && $max !== null) {
+                                if ($result < $min) {
+                                    $status = 'low';
+                                } elseif ($result > $max) {
+                                    $status = 'high';
+                                } else {
+                                    $status = 'normal';
+                                }
+                            }
+                    }
+
+
+                return [
+                    'analysis_id'   => $labAnalysis?->id,
+                    'analysis_name' => $labAnalysis?->lab_analyses_name,
+                    'result'        => $result,
+                    'range'         => [
+                        'min'  => $min,
+                        'max'  => $max,
+                        'unit' => $unit,
+                    ],
+                    'status'        => $status,
+                ];
+            });
 
         return [
             'data' => $tests,

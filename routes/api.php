@@ -26,29 +26,15 @@ use App\Models\Advertisement;
 use Illuminate\Auth\Events\verified;
 
 // when clicking on verefication link
-Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
-    event(new verified(User::query()->find($request->route('id'))));
-    return Response::Success(true, 'Email Verified Successfully');
-})->middleware(['auth:sanctum', 'signed'])->name('verification.verify');
 
-// resend verefiavation email
-Route::post('/email/verification-notification', function (Request $request) {
-
-    $user = $request->user();
-    if (!$user) {
-        return Response::Error([], 'gg');
-    }
-
-    $request->user()->sendEmailVerificationNotification();
-    return Response::Success(true, 'Verification link sent!');
-})->middleware(['auth:sanctum', 'throttle:6,1'])->name('verification.send');
 
 // Route::group(['middleware' => ['CorsMiddleware']], function () {
 Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
 Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
 Route::post('/login', [AuthController::class, 'login']);
 // });
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
 
 
 Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function () {
@@ -117,5 +103,6 @@ Route::group(
         Route::get('/getUsersWithRoles', [AuthController::class, 'getUsersWithRoles']);
         Route::get('/labReport', [ReportController::class, 'labReport']);
         Route::put('/updateGlobalUnitPrice/{price_of_global_unit}', [LabController::class, 'updateGlobalUnitPrice']);
+
     }
 );
