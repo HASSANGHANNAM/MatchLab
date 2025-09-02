@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Appointment;
+use App\Models\AppointmentLabHaveAnalys;
 use App\Models\Patient;
 use App\Models\lab_have_analyses;
 use App\Models\User;
@@ -26,10 +27,9 @@ class ArchiveService
                     'message' => 'لم يتم العثور على مختبر مرتبط بهذا المستخدم.',
                 ];
             }
-
             $appointments = Appointment::with([
                 'patient',
-                'analyses.lab_have_analyses.labAnalysis'
+                'analyses.labAnalysis.lab'  // إضافة معلومات المختبر إذا كانت موجودة
             ])->get();
 
             $archive = $appointments->map(function ($appointment) {
@@ -44,8 +44,9 @@ class ArchiveService
                     'gender' => $appointment->patient->gender ?? null,
                     'dob' => $appointment->patient->dob ?? null,
                     'analyses' => $appointment->analyses->map(function ($analysis) {
-                        $labHaveAnalysis = $analysis->lab_have_analyses;   // العلاقة الوسطية
-                        $labAnalysis = $labHaveAnalysis?->labAnalysis;
+                        // $labHaveAnalysis = $analysis->lab_have_analyses;   // العلاقة الوسطية
+                        $labAnalysis = $analysis?->labAnalysis;
+                        // dd($labAnalysis);
                         return [
                             'analysis_id' => $labAnalysis?->id,
                             'analysis_name' => $labAnalysis?->lab_analyses_name,
@@ -81,21 +82,18 @@ class ArchiveService
             }
 
             $patient = Patient::with('user')->findOrFail($patientId);
-
             $appointments = Appointment::where('lab_id', $labId)
                 ->where('patient_id', $patientId)
                 ->with([
-                    'appointmentLabHaveAnalys.lab_have_analyses.labAnalysis'
+                    'appointmentLabHaveAnalys.labAnalysis.range'
                 ])
                 ->get();
-
             $appointmentData = $appointments->map(function ($appointment) {
                 return [
                     'appointment_id' => $appointment->id,
                     'date_time'      => $appointment->date_time,
                     'analyses'       => $appointment->appointmentLabHaveAnalys->map(function ($item) {
-                        $labAnalysis = $item->lab_have_analyses->labAnalysis ?? null;
-
+                        $labAnalysis = $item->labAnalysis ?? null;
                         return [
                             'analysis_id'   => $labAnalysis?->id,
                             'analysis_name' => $labAnalysis?->lab_analyses_name,
@@ -133,6 +131,7 @@ class ArchiveService
                 ->where('appointments.lab_id', $lab->id)
                 ->distinct()
                 ->get();
+            // dd($lab);
             $message = 'successfully!';
         } else {
             $message = 'Unauthorized access!';
@@ -178,7 +177,7 @@ class ArchiveService
     public function getAppointmentTests(int $appointmentId): array
     {
         $patientId = Auth::user()->patient->id ?? null;
-         $patient = Auth::user()->patient;
+        $patient = Auth::user()->patient;
 
         if (!$patientId) {
             return [
@@ -187,78 +186,78 @@ class ArchiveService
             ];
         }
 
-
         $appointment = Appointment::where('id', $appointmentId)
             ->where('patient_id', $patientId)
-            ->with('appointmentLabHaveAnalys.lab_have_analyses.labAnalysis.range')
+            ->with('appointmentLabHaveAnalys.labAnalysis.range')
             ->first();
 
-            if (!$appointment) {
+        if (!$appointment) {
             return [
                 'data' => [],
                 'message' => 'لا يوجد تحليل'
             ];
         }
-            // $patientFullName = trim($patient->first_name . ' ' . $patient->last_name);
-            $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) use ($patient) {
-            $labAnalysis = $row->lab_have_analyses->labAnalysis ?? null;
-            $range = $labAnalysis?->range;
 
-                    $result = $row->result;
-                    $min = null;
-                    $max = null;
-                    $unit = $range?->unit;
-                    $status = null;
+        $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) use ($patient) {
+            // التصحيح هنا: استخدام labAnalysis بدلاً من lab_have_analyses
+            $labAnalysis = $row->labAnalysis ?? null;
 
-                    if ($range) {
-                        $age = $patient->dob ? Carbon::parse($patient->dob)->age : null;
+            if (!$labAnalysis) {
+                return null; // أو معالجة الحالة عندما لا يكون هناك labAnalysis
+            }
 
-                        if ($age !== null) {
-                            if ($age <= 1) {
-                                $min = $range->newborns_min;
-                                $max = $range->newborns_max;
-                            } elseif ($age <= 12) {
-                                $min = $range->children_min;
-                                $max = $range->children_max;
-                            } elseif ($age > 12 && $age < 60) {
-                                if ($patient->gender === 'male') {
-                                    $min = $range->men_min;
-                                    $max = $range->men_max;
-                                } else {
-                                    $min = $range->women_min;
-                                    $max = $range->women_max;
-                                }
-                            } else {
-                                $min = $range->adults_min;
-                                $max = $range->adults_max;
-                            }
-                        }
-                            if ($result !== null && $min !== null && $max !== null) {
-                                if ($result < $min) {
-                                    $status = 'low';
-                                } elseif ($result > $max) {
-                                    $status = 'high';
-                                } else {
-                                    $status = 'normal';
-                                }
-                            }
+            $range = $labAnalysis->range;
+            $result = $row->result;
+            $min = null;
+            $max = null;
+            $unit = $range ? $range->unit : null;
+            $status = null;
+
+            if ($range && $patient->dob) {
+                $age = Carbon::parse($patient->dob)->age;
+
+                if ($age <= 1) {
+                    $min = $range->newborns_min;
+                    $max = $range->newborns_max;
+                } elseif ($age <= 12) {
+                    $min = $range->children_min;
+                    $max = $range->children_max;
+                } else {
+                    if ($patient->gender === 'male') {
+                        $min = $range->men_min;
+                        $max = $range->men_max;
+                    } else {
+                        $min = $range->women_min;
+                        $max = $range->women_max;
                     }
+                }
 
-                $patientFullName = trim(Auth::user()->first_name . ' ' . Auth::user()->last_name);
+                if ($result !== null && $min !== null && $max !== null) {
+                    if ($result < $min) {
+                        $status = 'low';
+                    } elseif ($result > $max) {
+                        $status = 'high';
+                    } else {
+                        $status = 'normal';
+                    }
+                }
+            }
 
-                return [
-                    'patient_name' => $patientFullName,
-                    'analysis_id'   => $labAnalysis?->id,
-                    'analysis_name' => $labAnalysis?->lab_analyses_name,
-                    'result'        => $result,
-                    'range'         => [
-                        'min'  => $min,
-                        'max'  => $max,
-                        'unit' => $unit,
-                    ],
-                    'status'        => $status,
-                ];
-            });
+            $patientFullName = trim(Auth::user()->first_name . ' ' . Auth::user()->last_name);
+
+            return [
+                'patient_name' => $patientFullName,
+                'analysis_id' => $labAnalysis->id,
+                'analysis_name' => $labAnalysis->lab_analyses_name,
+                'result' => $result,
+                'range' => [
+                    'min' => $min,
+                    'max' => $max,
+                    'unit' => $unit,
+                ],
+                'status' => $status,
+            ];
+        });
 
         return [
             'data' => $tests,

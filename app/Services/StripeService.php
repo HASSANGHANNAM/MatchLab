@@ -212,6 +212,9 @@ class StripeService
         $platformAccountId = env('STRIPE_ACCOUNT_ID');
         $description = "withdraw from {$AccountId} balance";
         $checkBalance = $this->getConnectedAccountBalance($AccountId);
+        if ($checkBalance['data'] == null) {
+            return ['message' => "fail withdrawBalance because TRY on VPN", 'data' => null, 'code' => 401];
+        }
         if ($checkBalance['data']['total'] < $amount) {
             return ['message' => "fail withdrawBalance because amount gretar than balance", 'data' => null, 'code' => 401];
         }

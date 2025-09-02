@@ -10,12 +10,17 @@ class AppointmentLabHaveAnalys extends Model
     use HasFactory;
     //      use HasFactory, HasApiTokens;
     protected $table = "appointment_lab_have_analys";
-    protected $fillable = ['result', 'lab_have_analys_id', 'appointment_id'];
+    protected $fillable = ['result'/*, 'lab_have_analys_id'*/, 'appointment_id', 'lab_analys_id'];
     public $timestamps = true;
-    public function lab_have_analyses()
+    public function labAnalysis()
     {
-        return $this->belongsTo(lab_have_analyses::class,'lab_have_analys_id','id');
+        return $this->belongsTo(LabAnalysis::class, 'lab_analys_id');
     }
+
+    // public function lab_have_analyses()
+    // {
+    //     return $this->belongsTo(lab_have_analyses::class,'lab_have_analys_id','id');
+    // }
     public function appointment()
     {
         return $this->belongsTo(Appointment::class);

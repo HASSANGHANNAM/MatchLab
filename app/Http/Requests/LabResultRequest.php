@@ -23,7 +23,7 @@ class LabResultRequest extends FormRequest
     {
         return [
             'appointment_id' => 'required|integer|exists:appointments,id',
-            'lab_have_analys_id' => 'required|integer|exists:lab_have_analyses,id',
+            'lab_analys_id' => 'required|integer|exists:lab_have_analyses,id',
             'result' => 'required|max:255',
         ];
     }

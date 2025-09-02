@@ -135,7 +135,6 @@ class UserServices
                 'lab_id' => $lab['id'] ?? null,
             ]);
             $this->sendVerificationCode($user);
-
             $user->load('roles', 'permissions');
             $user = User::query()->find($user->id);
             $user = $this->appendRolesAndPermissions($user);
@@ -203,16 +202,6 @@ class UserServices
             $message = 'User Email not found';
             $code = 404;
         }
-
-        if (is_null($user->email_verified_at)) {
-            return [
-                'user' => null,
-                'message' => 'يجب تأكيد البريد الإلكتروني أولاً',
-                'code' => 403
-            ];
-        }
-
-
         return ['user' => $data, 'message' => $message, 'code' => $code];
     }
 

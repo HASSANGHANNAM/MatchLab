@@ -167,25 +167,25 @@ class appointmentServices
                 'patient_phone' => $data['patient_phone'],
                 'patient_id_number' => $data['patient_id_number'],
                 'patient_id' => $data['patient_id'],
-                'longitude' => $data['longitude'],
-                'latitude' => $data['latitude'],
+                'longitude' => $data['longitude'] ?? null,
+                'latitude' => $data['latitude'] ?? null,
                 'lab_id' => $labId,
                 'location_id' => $data['location_id'] ?? null,
                 'status' => 'pending',
                 'date_time' => $appointmentDateTime,
                 'total_Price' => $price
             ]);
-
             foreach ($data['analyses'] as $analysisId) {
                 $labHaveAnalysis = lab_have_analyses::where('lab_id', $labId)
                     ->where('lab_analys_id', $analysisId)
                     ->first();
                 AppointmentLabHaveAnalys::create([
                     'appointment_id' => $appointment->id,
-                    'lab_have_analys_id' => $labHaveAnalysis->id,
+                    'lab_analys_id' => $analysisId,
                     'result' => null
                 ]);
             }
+            // dd($data);
 
             return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'lab.location')];
         });
@@ -238,7 +238,6 @@ class appointmentServices
                 'message' => 'غير مصرح لك بتحديث الموعد.'
             ];
         }
-
 
         $patientId = $user->patient->id;
         if (!$patientId) {
@@ -359,13 +358,14 @@ class appointmentServices
 
 
                 foreach ($data['analyses'] as $analysisId) {
-                    $labHaveAnalysis = lab_have_analyses::where('lab_id', $labId)
-                        ->where('lab_analys_id', $analysisId)
-                        ->first();
+
+                    // $labHaveAnalysis = lab_have_analyses::where('lab_id', $labId)
+                    //     ->where('lab_analys_id', $analysisId)
+                    //     ->first();
 
                     AppointmentLabHaveAnalys::create([
                         'appointment_id' => $appointment->id,
-                        'lab_have_analys_id' => $labHaveAnalysis->id,
+                        'lab_analys_id' => $analysisId,
                         'result' => null
                     ]);
                 }
@@ -373,7 +373,7 @@ class appointmentServices
 
             return [
                 'status' => 1,
-                'data' => $appointment->load('lab', 'location'),
+                'data' => $appointment->load('lab', 'lab.location'),
                 'message' => 'تم تحديث الموعد بنجاح!'
             ];
         });

@@ -37,8 +37,6 @@ class LabAnalysis extends Model
         return $this->hasOne(Range::class, 'lab_analys_id')->withDefault([
             'newborns_min' => null,
             'newborns_max' => null,
-            'newborns_min' => null,
-            'newborns_max' => null,
             'children_min' => null,
             'children_max' => null,
             'adults_min' => null,

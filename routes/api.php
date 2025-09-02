@@ -25,39 +25,30 @@ use App\Http\Middleware\VerifiedEmail;
 use App\Models\Advertisement;
 use Illuminate\Auth\Events\verified;
 
-// when clicking on verefication link
 
 
-// Route::group(['middleware' => ['CorsMiddleware']], function () {
 Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
 Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
-Route::post('/login', [AuthController::class, 'login']);
-// });
 Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('/resend-verification', [AuthController::class, 'resendVerification']);
+Route::get('/citySearch', [CityController::class, 'citySearch']);
 
+Route::group(['middleware' => [VerifiedEmail::class]], function () {
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function () {
-
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::post('/updatePatient', [AuthController::class, 'updatePatient']);
     Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
     Route::get('/getOwnerLabInfo', [AuthController::class, 'getOwnerLabInfo']);
-    Route::get('/citySearch', [CityController::class, 'citySearch']);
+    Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
+    Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
 });
 
-// 'CorsMiddleware'
 Route::group(
-    ['middleware' => ['auth:sanctum']],
-    function () {
-        Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
-        Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
-    }
-
-);
-Route::group(
-    ['middleware' => ['auth:sanctum', 'CheckLabSubscription']],
+    ['middleware' => ['auth:sanctum', VerifiedEmail::class, 'CheckLabSubscription']],
     function () {
         // Route::get('/citySearch', [CityController::class, 'citySearch']);
         Route::get('/sampleSearch', [SampleController::class, 'sampleSearch']);
@@ -103,6 +94,5 @@ Route::group(
         Route::get('/getUsersWithRoles', [AuthController::class, 'getUsersWithRoles']);
         Route::get('/labReport', [ReportController::class, 'labReport']);
         Route::put('/updateGlobalUnitPrice/{price_of_global_unit}', [LabController::class, 'updateGlobalUnitPrice']);
-
     }
 );

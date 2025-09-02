@@ -28,6 +28,7 @@ class Appointment extends Model
     {
         return $this->hasMany(AppointmentLabHaveAnalys::class, 'appointment_id');
     }
+
     public function analyses()
     {
         return $this->hasMany(AppointmentLabHaveAnalys::class, 'appointment_id');

@@ -12,8 +12,12 @@ class Range extends Model
     protected $table = "ranges";
     protected $fillable = ['lab_analys_id', 'newborns_min', 'newborns_max', 'children_min', 'children_max', 'adults_min', 'adults_max', 'women_min', 'women_max', 'men_min', 'men_max', 'unit'];
     public $timestamps = true;
-    public function range()
+    // public function range()
+    // {
+    //     return $this->hasOne(Range::class, 'lab_analys_id');
+    // }
+    public function labAnalysis()
     {
-        return $this->hasOne(Range::class, 'lab_analys_id');
+        return $this->belongsTo(LabAnalysis::class, 'lab_analys_id');
     }
 }

@@ -14,8 +14,10 @@ return new class extends Migration
         Schema::create('appointment_lab_have_analys', function (Blueprint $table) {
             $table->id();
             $table->float('result')->nullable();
-            $table->unsignedBigInteger('lab_have_analys_id');
-            $table->foreign('lab_have_analys_id')->references('id')->on('lab_have_analyses')->onDelete('cascade');
+            // $table->unsignedBigInteger('lab_have_analys_id');
+            // $table->foreign('lab_have_analys_id')->references('id')->on('lab_have_analyses')->onDelete('cascade');
+            $table->unsignedBigInteger('lab_analys_id');
+            $table->foreign('lab_analys_id')->references('id')->on('lab_analyses')->onDelete('cascade');
             $table->unsignedBigInteger('appointment_id');
             $table->foreign('appointment_id')->references('id')->on('appointments')->onDelete('cascade');
             $table->timestamps();
