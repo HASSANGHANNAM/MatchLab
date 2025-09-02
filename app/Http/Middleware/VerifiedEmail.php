@@ -49,6 +49,13 @@ class VerifiedEmail
         }
         $verification = EmailVerification::where('user_id', $user->id)
             ->first();
+        if ($verification == null) {
+            return response()->json([
+                'status' => 1,
+                'data' => null,
+                'message' => 'verification not found'
+            ], 404);
+        }
         if ($verification->is_verified == false) {
             return Response::Error(null, 'your email address is not verified');
         }
