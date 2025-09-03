@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests\UserSinupRequest;
 use App\Http\Requests\UserSininRequest;
 use App\Http\Requests\VerifyEmailRequest;
+use App\Http\Requests\updatePatientRequest;
+use App\Http\Requests\updateLabOwner;
 use App\Http\Requests\UserSinupLabOwnerRequest;
 use App\Http\Responses\Response;
 use App\Services\UserServices;
@@ -78,7 +80,7 @@ class AuthController extends Controller
         return Response::Success($this->userServices->details(), 'user info successfully');
     }
 
-    public function updatePatient(UserSinupRequest $request): JsonResponse
+    public function updatePatient(updatePatientRequest $request): JsonResponse
     {
         try {
             $data = $this->userServices->updatePatient($request->validated());
@@ -89,7 +91,7 @@ class AuthController extends Controller
         }
     }
 
-    public function updateLabOwner(UserSinupLabOwnerRequest $request): JsonResponse
+    public function updateLabOwner(updateLabOwner $request): JsonResponse
     {
         try {
             $data = $this->userServices->updateLabOwner($request->validated());

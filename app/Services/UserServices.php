@@ -184,6 +184,15 @@ class UserServices
                     $user->update(['fcm_token' => $request['fcm_token']]);
                 }
 
+                if ($user->email_verified_at === null) {
+                return [
+                    'user' => null,
+                    'message' => 'يجب تفعيل البريد الإلكتروني الجديد قبل تسجيل الدخول.',
+                    'code' => 403
+                ];
+            }
+
+
                 $user = $this->appendRolesAndPermissions($user);
                 $user['token'] = $user->createToken("token")->plainTextToken;
                 $data['token'] = $user['token'];
@@ -229,20 +238,33 @@ class UserServices
         return DB::transaction(function () use ($request) {
             $user = auth()->user();
 
+            $oldEmail = $user->email;
+            $newEmail = $request['email'] ?? $oldEmail;
+
             $user->update([
-                'first_name' => $request['first_name'] ?? $user->first_name ?? null,
-                'last_name' => $request['last_name'] ?? $user->last_name,
-                'email' => $request['email'] ?? $user->email ?? null,
-                'password' => isset($request['password']) ? Hash::make($request['password']) : $user->password,
-                'fcm_token' => $request['fcm_token'] ?? $user->fcm_token,
+                'first_name' => $request['first_name'] ?? $user->first_name,
+                'last_name'  => $request['last_name'] ?? $user->last_name,
+                'email'      => $newEmail,
+                'password'   => isset($request['password']) ? Hash::make($request['password']) : $user->password,
+                'fcm_token'  => $request['fcm_token'] ?? $user->fcm_token,
             ]);
 
+            // ✅ إذا غيّر الإيميل نطلب إعادة التحقق
+            if ($oldEmail !== $newEmail) {
+                $user->email_verified_at = null;
+                $user->save();
+
+                // إرسال إشعار التحقق
+               $this->sendVerificationCode($user);
+            }
+
             $user->patient()->update([
-                'phone' => $request['phone'] ?? $user->patient->phone,
-                'gender' => $request['gender'] ?? $user->patient->gender,
-                'dob' => $request['dob'] ?? $user->patient->dob,
+                'phone'           => $request['phone'] ?? $user->patient->phone,
+                'gender'          => $request['gender'] ?? $user->patient->gender,
+                'dob'             => $request['dob'] ?? $user->patient->dob,
                 'Health_Problems' => $request['Health_Problems'] ?? $user->patient->Health_Problems,
             ]);
+
             $notificationService = new NotificationService();
             $notificationService->send(
                 $user,
@@ -250,9 +272,11 @@ class UserServices
                 "تم تحديث معلومات حسابك كمريض بنجاح."
             );
 
-            $message = 'Patient information updated successfully!';
-            $code = 200;
-            return ['user' => $user, 'message' => $message, 'code' => $code];
+            $message = $oldEmail !== $newEmail
+                ? 'تم تحديث البيانات، يرجى تفعيل البريد الإلكتروني الجديد.'
+                : 'Patient information updated successfully!';
+
+            return ['user' => $user, 'message' => $message, 'code' => 200];
         });
     }
 
@@ -291,11 +315,6 @@ class UserServices
                 $request['image']->move(public_path('lab_images'), $fileName);
                 $lab->update(['image_path' => "/lab_images/" . $fileName]);
             }
-
-            // return [
-            //     'user' => $user->load('LabOwner.lab.location'),
-            //     'message' => 'Lab Owner information updated successfully!'
-            // ];
 
             $user = $user->load('LabOwner.lab.location');
 

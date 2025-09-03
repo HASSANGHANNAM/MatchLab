@@ -145,8 +145,6 @@ class ArchiveService
     {
         $patientId = Auth::user()->patient->id ?? null;
 
-
-
         if (!$patientId) {
             return [
                 'data' => [],
@@ -155,7 +153,12 @@ class ArchiveService
         }
 
         $appointments = Appointment::where('patient_id', $patientId)
-            ->with('lab:id,lab_name')
+            ->with([
+                'lab:id,lab_name',
+                'location:id,address,city_id',
+                'location.city:id,city_name',
+                'appointmentLabHaveAnalys.labAnalysis:id,lab_analyses_name'
+            ])
             ->orderByDesc('date_time')
             ->get();
 
@@ -164,6 +167,16 @@ class ArchiveService
                 'appointment_id' => $appt->id,
                 'lab_name'       => $appt->lab?->lab_name,
                 'date_time'      => $appt->date_time,
+                'patient_name'   => $appt->patient_name,
+                'patient_id_number'    => $appt->patient_id_number,
+                'tests'          => $appt->appointmentLabHaveAnalys
+                                        ->map(fn($aa) => [
+                                            'id'   => $aa->labAnalysis?->id,
+                                            'name' => $aa->labAnalysis?->lab_analyses_name,
+                                        ])
+                                        ->filter()
+                                        ->values(),
+                'booking_type'   => $appt->type,
             ];
         });
 
@@ -174,10 +187,10 @@ class ArchiveService
     }
 
 
+
     public function getAppointmentTests(int $appointmentId): array
     {
         $patientId = Auth::user()->patient->id ?? null;
-        $patient = Auth::user()->patient;
 
         if (!$patientId) {
             return [
@@ -198,12 +211,11 @@ class ArchiveService
             ];
         }
 
-        $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) use ($patient) {
-            // التصحيح هنا: استخدام labAnalysis بدلاً من lab_have_analyses
+        $tests = $appointment->appointmentLabHaveAnalys->map(function ($row) use ($appointment) {
             $labAnalysis = $row->labAnalysis ?? null;
 
             if (!$labAnalysis) {
-                return null; // أو معالجة الحالة عندما لا يكون هناك labAnalysis
+                return null;
             }
 
             $range = $labAnalysis->range;
@@ -213,8 +225,8 @@ class ArchiveService
             $unit = $range ? $range->unit : null;
             $status = null;
 
-            if ($range && $patient->dob) {
-                $age = Carbon::parse($patient->dob)->age;
+            if ($range && $appointment->patient?->dob) {
+                $age = Carbon::parse($appointment->patient->dob)->age;
 
                 if ($age <= 1) {
                     $min = $range->newborns_min;
@@ -223,7 +235,7 @@ class ArchiveService
                     $min = $range->children_min;
                     $max = $range->children_max;
                 } else {
-                    if ($patient->gender === 'male') {
+                    if ($appointment->patient->gender === 'male') {
                         $min = $range->men_min;
                         $max = $range->men_max;
                     } else {
@@ -243,27 +255,26 @@ class ArchiveService
                 }
             }
 
-            $patientFullName = trim(Auth::user()->first_name . ' ' . Auth::user()->last_name);
-
             return [
-                'patient_name' => $patientFullName,
-                'analysis_id' => $labAnalysis->id,
-                'analysis_name' => $labAnalysis->lab_analyses_name,
-                'result' => $result,
+                'patient_name'   => $appointment->patient_name,  
+                'analysis_id'    => $labAnalysis->id,
+                'analysis_name'  => $labAnalysis->lab_analyses_name,
+                'result'         => $result,
                 'range' => [
-                    'min' => $min,
-                    'max' => $max,
+                    'min'  => $min,
+                    'max'  => $max,
                     'unit' => $unit,
                 ],
                 'status' => $status,
             ];
-        });
+        })->filter()->values();
 
         return [
             'data' => $tests,
             'message' => 'تم جلب قائمة الفحوصات بنجاح',
         ];
     }
+
 
 
     // public function getTestResult(int $appointmentId, int $analysisId): array

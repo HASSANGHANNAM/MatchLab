@@ -37,7 +37,6 @@ class UserSinupLabOwnerRequest extends FormRequest
             'latitude' => 'required',
             'longitude' => 'required',
             'address' => 'required|string',
-
             'image' => 'required|image|mimes:jpeg,png,jpg'
         ];
     }

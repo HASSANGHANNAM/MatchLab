@@ -107,6 +107,13 @@ class appointmentServices
         return DB::transaction(function () use ($data) {
             $labId = $data['lab_id'];
             $appointmentDateTime = Carbon::parse($data['date_time']);
+
+            if ($appointmentDateTime->lessThanOrEqualTo(Carbon::now())) {
+                return [
+                    'message' => 'لا يمكن حجز موعد في وقت مضى.',
+                    'user' => null
+                ];
+            }
             $dayOfWeek = $appointmentDateTime->format('l');
             $appointmentTime = $appointmentDateTime->format('H:i:s');
             $patient = DB::table('patients')
