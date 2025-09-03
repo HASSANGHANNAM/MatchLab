@@ -13,9 +13,7 @@ use Throwable;
 
 class ArchiveService
 {
-    /**
-     * Get all reservations for the authenticated lab (with patients + analyses + results)
-     */
+
     public function getLabArchive(): array
     {
         try {
@@ -29,7 +27,7 @@ class ArchiveService
             }
             $appointments = Appointment::with([
                 'patient',
-                'analyses.labAnalysis.lab'  // إضافة معلومات المختبر إذا كانت موجودة
+                'analyses.labAnalysis.lab'
             ])->get();
 
             $archive = $appointments->map(function ($appointment) {
@@ -64,8 +62,6 @@ class ArchiveService
             throw $th;
         }
     }
-
-
 
 
     public function getPatientArchive(int $patientId): array
@@ -131,7 +127,7 @@ class ArchiveService
                 ->where('appointments.lab_id', $lab->id)
                 ->distinct()
                 ->get();
-            // dd($lab);
+
             $message = 'successfully!';
         } else {
             $message = 'Unauthorized access!';
@@ -256,7 +252,7 @@ class ArchiveService
             }
 
             return [
-                'patient_name'   => $appointment->patient_name,  
+                'patient_name'   => $appointment->patient_name,
                 'analysis_id'    => $labAnalysis->id,
                 'analysis_name'  => $labAnalysis->lab_analyses_name,
                 'result'         => $result,
@@ -274,53 +270,4 @@ class ArchiveService
             'message' => 'تم جلب قائمة الفحوصات بنجاح',
         ];
     }
-
-
-
-    // public function getTestResult(int $appointmentId, int $analysisId): array
-    // {
-    //     $patientId = Auth::user()->patient->id ?? null;
-
-    //     if (!$patientId) {
-    //         return [
-    //             'data' => null,
-    //             'message' => 'هذا المستخدم ليس مريضاً مسجلاً.'
-    //         ];
-    //     }
-
-    //     $appointment = Appointment::where('id', $appointmentId)
-    //         ->where('patient_id', $patientId)
-    //         ->with('appointmentLabHaveAnalys.lab_have_analyses.labAnalysis')
-    //         ->firstOrFail();
-
-    //     $row = $appointment->appointmentLabHaveAnalys->first(function ($item) use ($analysisId) {
-    //         $labAnalysis = $item->lab_have_analyses->labAnalysis ?? null;
-    //         if (!$labAnalysis) return false;
-
-    //         // استخدام == بدلاً من === لتجنب مشاكل النوع
-    //         return $labAnalysis->id == $analysisId;
-    //     });
-
-
-    //     if (!$row) {
-    //         return [
-    //             'data' => null,
-    //             'message' => 'لم يتم العثور على الفحص المطلوب.'
-    //         ];
-    //     }
-
-    //     $labAnalysis = $row->lab_have_analyses->labAnalysis ?? null;
-
-    //     return [
-    //         'data' => [
-    //             'appointment_id' => $appointment->id,
-    //             'analysis_id'    => $labAnalysis?->id,
-    //             'analysis_name'  => $labAnalysis?->lab_analyses_name,
-    //             'result'         => $row->result,
-    //         ],
-    //         'message' => 'تم جلب نتيجة الفحص بنجاح',
-    //     ];
-    // }
-
-
 }

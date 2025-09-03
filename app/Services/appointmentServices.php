@@ -7,6 +7,7 @@ use App\Models\Appointment;
 use App\Models\lab_have_analyses;
 use App\Models\abAnalysis;
 use App\Models\AppointmentLabHaveAnalys;
+use App\Services\NotificationService;
 use App\Models\Lab;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -16,10 +17,12 @@ use Throwable;
 class appointmentServices
 {
     protected $stripeService;
+    protected $notificationService;
 
-    public function __construct(StripeService $stripeService)
+    public function __construct(StripeService $stripeService, NotificationService $notificationService)
     {
         $this->stripeService = $stripeService;
+        $this->notificationService = $notificationService;
     }
     public function setLabSchedules(array $schedules,): array
     {
@@ -192,7 +195,12 @@ class appointmentServices
                     'result' => null
                 ]);
             }
-            // dd($data);
+            //notification
+                $this->notificationService->send(
+                Auth::user(),
+                "تم حجز موعدك بنجاح",
+                "موعدك بتاريخ {$appointment->date_time} في المختبر {$appointment->lab->name}"
+            );
 
             return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'lab.location')];
         });
@@ -227,6 +235,14 @@ class appointmentServices
 
         $appointment->status = $status;
         $appointment->save();
+
+        //notification
+             $this->notificationService->send(
+            $appointment->patient->user,
+            "تم تحديث حالة موعدك",
+            "موعدك أصبح الآن: {$status}",
+            'appointment_status'
+        );
 
         return [
             'data' => $appointment,
@@ -377,6 +393,12 @@ class appointmentServices
                     ]);
                 }
             }
+                //notification
+                $this->notificationService->send(
+                Auth::user(),
+                "تم تعديل موعدك",
+                "موعدك الجديد بتاريخ {$appointment->date_time}"
+            );
 
             return [
                 'status' => 1,
@@ -437,6 +459,13 @@ class appointmentServices
         }
         // end stripe
         $appointment->delete();
+
+            //notification
+            $this->notificationService->send(
+            $user,
+            "تم إلغاء موعدك",
+            "تم حذف الموعد الذي كان بتاريخ {$appointment->date_time}"
+            );
 
         return [
             'status' => 1,
