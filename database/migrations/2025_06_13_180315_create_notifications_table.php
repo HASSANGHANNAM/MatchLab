@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->string('phone', 20)->unique();
+            // $table->string('phone', 20)->unique();
             $table->string('message');
-            $table->enum("type", ["paid", "unpaid", "wallet", "cash"]);
+            // $table->enum("type", ["paid", "unpaid", "wallet", "cash"]);
             $table->dateTime('send_at');
             $table->timestamps();
         });
