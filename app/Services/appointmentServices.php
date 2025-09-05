@@ -286,46 +286,49 @@ class appointmentServices
         return DB::transaction(function () use ($appointment, $data, $patientId) {
             $labId = $data['lab_id'] ?? $appointment->lab_id;
             $lab = DB::table('labs')->where('id', $labId)->first();
-            $appointmentDateTime = isset($data['date_time']) ? Carbon::parse($data['date_time']) : $appointment->date_time;
-            if ($appointmentDateTime->lt(now())) {
+            $appointmentDateTime = isset($data['date_time']) ? Carbon::parse($data['date_time']) : null;
+            if ($appointmentDateTime != null && $appointmentDateTime->lt(now())) {
                 return [
                     'status' => 0,
                     'data' => null,
                     'message' => 'لا يمكن حجز موعد بتاريخ مضى.'
                 ];
             }
-            $dayOfWeek = $appointmentDateTime->format('l');
-            $appointmentTime = $appointmentDateTime->format('H:i:s');
+            if ($appointmentDateTime != null) {
+                $dayOfWeek = $appointmentDateTime->format('l');
+                $appointmentTime = $appointmentDateTime->format('H:i:s');
 
+                $workingHour = LabWorkingHour::where('lab_id', $labId)
+                    ->where('day_of_week', $dayOfWeek)
+                    ->where('start_time', '<=', $appointmentTime)
+                    ->where('end_time', '>', $appointmentTime)
+                    ->first();
 
-            $workingHour = LabWorkingHour::where('lab_id', $labId)
-                ->where('day_of_week', $dayOfWeek)
-                ->where('start_time', '<=', $appointmentTime)
-                ->where('end_time', '>', $appointmentTime)
-                ->first();
+                if (!$workingHour) {
+                    return [
+                        'status' => 0,
+                        'data' => null,
+                        'message' => 'هذا الوقت خارج أوقات عمل المختبر.'
+                    ];
+                }
+                $startHour = $appointmentDateTime->copy()->startOfHour();
+                $endHour = $appointmentDateTime->copy()->addHour();
+                $appointmentsCount = Appointment::where('lab_id', $labId)
+                    ->whereBetween('date_time', [$startHour, $endHour])
+                    ->where('id', '!=', $appointment->id)
+                    ->count();
 
-            if (!$workingHour) {
-                return [
-                    'status' => 0,
-                    'data' => null,
-                    'message' => 'هذا الوقت خارج أوقات عمل المختبر.'
-                ];
+                if ($appointmentsCount >= $workingHour->patients_per_hour) {
+                    return [
+                        'status' => 0,
+                        'data' => null,
+                        'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.'
+                    ];
+                }
+            } else {
+                $appointmentDateTime = $appointment->date_time;
             }
 
-            $startHour = $appointmentDateTime->copy()->startOfHour();
-            $endHour = $appointmentDateTime->copy()->addHour();
-            $appointmentsCount = Appointment::where('lab_id', $labId)
-                ->whereBetween('date_time', [$startHour, $endHour])
-                ->where('id', '!=', $appointment->id)
-                ->count();
-
-            if ($appointmentsCount >= $workingHour->patients_per_hour) {
-                return [
-                    'status' => 0,
-                    'data' => null,
-                    'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.'
-                ];
-            }
             $price = 0;
             if (!empty($data['analyses']) && is_array($data['analyses'])) {
                 foreach ($data['analyses'] as $analysisId) {
@@ -358,9 +361,10 @@ class appointmentServices
                 else
                     $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $labUser->stripe_account_id, $pricenew);
                 if ($payment['code'] != 200) {
-                    return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
+                    return ['message' => 'fail appointment because ' . $payment['message'], 'data' => null];
                 }
             }
+
             // end stripe
             $appointment->update([
                 'type' => $data['type'] ?? $appointment->type,
@@ -368,6 +372,8 @@ class appointmentServices
                 'patient_phone' => $data['patient_phone'] ?? $appointment->patient_phone,
                 'patient_id_number' => $data['patient_id_number'] ?? $appointment->patient_id_number,
                 'patient_id' => $patientId,
+                'longitude' => $data['longitude'] ??  $appointment->longitude,
+                'latitude' => $data['latitude'] ??  $appointment->latitude,
                 'lab_id' => $labId,
                 'total_Price' => $pricenew,
                 'location_id' => $data['location_id'] ?? $appointment->location_id,
