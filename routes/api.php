@@ -40,9 +40,12 @@ Route::group(['middleware' => [VerifiedEmail::class]], function () {
 Route::group(['middleware' => ['auth:sanctum', VerifiedEmail::class]], function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/logout', [AuthController::class, 'logout']);
-    Route::post('/updatePatient', [AuthController::class, 'updatePatient']);
-    Route::post('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
+    Route::put('/updatePatient', [AuthController::class, 'updatePatient']);
+    Route::put('/updatePatientPassword', [AuthController::class, 'updatePatientPassword']);
+    Route::put('/updatePatientEmail', [AuthController::class, 'updatePatientEmail']);
+    Route::put('/updateLabOwner', [AuthController::class, 'updateLabOwner']);
     Route::get('/getOwnerLabInfo', [AuthController::class, 'getOwnerLabInfo']);
+    Route::get('/getPatientInfo', [AuthController::class, 'getPatientInfo']);
     Route::get('/allPlan', [SubscriptionController::class, 'allPlan']);
     Route::post('/addPlanDays', [SubscriptionController::class, 'addPlanDays']);
 });

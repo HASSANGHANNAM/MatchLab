@@ -196,7 +196,7 @@ class appointmentServices
                 ]);
             }
             //notification
-                $this->notificationService->send(
+            $this->notificationService->send(
                 Auth::user(),
                 "تم حجز موعدك بنجاح",
                 "موعدك بتاريخ {$appointment->date_time} في المختبر {$appointment->lab->name}"
@@ -237,7 +237,7 @@ class appointmentServices
         $appointment->save();
 
         //notification
-             $this->notificationService->send(
+        $this->notificationService->send(
             $appointment->patient->user,
             "تم تحديث حالة موعدك",
             "موعدك أصبح الآن: {$status}",
@@ -393,8 +393,8 @@ class appointmentServices
                     ]);
                 }
             }
-                //notification
-                $this->notificationService->send(
+            //notification
+            $this->notificationService->send(
                 Auth::user(),
                 "تم تعديل موعدك",
                 "موعدك الجديد بتاريخ {$appointment->date_time}"
@@ -460,12 +460,12 @@ class appointmentServices
         // end stripe
         $appointment->delete();
 
-            //notification
-            $this->notificationService->send(
+        //notification
+        $this->notificationService->send(
             $user,
             "تم إلغاء موعدك",
             "تم حذف الموعد الذي كان بتاريخ {$appointment->date_time}"
-            );
+        );
 
         return [
             'status' => 1,

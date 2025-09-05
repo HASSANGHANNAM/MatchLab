@@ -28,7 +28,9 @@ class ArchiveService
             $appointments = Appointment::with([
                 'patient',
                 'analyses.labAnalysis.lab'
-            ])->get();
+            ])
+                ->where('lab_id', $lab->id)
+                ->get();
 
             $archive = $appointments->map(function ($appointment) {
                 return [
@@ -136,7 +138,6 @@ class ArchiveService
         return ['message' => $message, 'user' => $users];
     }
 
-
     public function getMyBookings(): array
     {
         $patientId = Auth::user()->patient->id ?? null;
@@ -157,7 +158,6 @@ class ArchiveService
             ])
             ->orderByDesc('date_time')
             ->get();
-
         $data = $appointments->map(function ($appt) {
             return [
                 'appointment_id' => $appt->id,
@@ -165,13 +165,15 @@ class ArchiveService
                 'date_time'      => $appt->date_time,
                 'patient_name'   => $appt->patient_name,
                 'patient_id_number'    => $appt->patient_id_number,
+                'longitude'    => $appt->longitude,
+                'latitude'    => $appt->latitude,
                 'tests'          => $appt->appointmentLabHaveAnalys
-                                        ->map(fn($aa) => [
-                                            'id'   => $aa->labAnalysis?->id,
-                                            'name' => $aa->labAnalysis?->lab_analyses_name,
-                                        ])
-                                        ->filter()
-                                        ->values(),
+                    ->map(fn($aa) => [
+                        'id'   => $aa->labAnalysis?->id,
+                        'name' => $aa->labAnalysis?->lab_analyses_name,
+                    ])
+                    ->filter()
+                    ->values(),
                 'booking_type'   => $appt->type,
             ];
         });
@@ -181,7 +183,6 @@ class ArchiveService
             'message' => 'تم جلب سجل الحجوزات بنجاح',
         ];
     }
-
 
 
     public function getAppointmentTests(int $appointmentId): array

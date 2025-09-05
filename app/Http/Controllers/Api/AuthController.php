@@ -9,6 +9,8 @@ use App\Http\Requests\UserSininRequest;
 use App\Http\Requests\VerifyEmailRequest;
 use App\Http\Requests\updatePatientRequest;
 use App\Http\Requests\updateLabOwner;
+use App\Http\Requests\UpdatePatientEmailRequest;
+use App\Http\Requests\UpdatePatientPasswordRequest;
 use App\Http\Requests\UserSinupLabOwnerRequest;
 use App\Http\Responses\Response;
 use App\Services\UserServices;
@@ -111,6 +113,16 @@ class AuthController extends Controller
             return Response::Error([], $message);
         }
     }
+    public function getPatientInfo(): JsonResponse
+    {
+        try {
+            $data = $this->userServices->getPatientInfo();
+            return Response::success($data['data'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
     public function getUsersWithRoles(): JsonResponse
     {
         try {
@@ -155,6 +167,26 @@ class AuthController extends Controller
             return Response::success([], $message);
         } catch (\Throwable $th) {
             return Response::Error([], $th->getMessage());
+        }
+    }
+    public function updatePatientPassword(UpdatePatientPasswordRequest $request): JsonResponse
+    {
+        try {
+            $data = $this->userServices->updatePatientPassword($request->validated());
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
+        }
+    }
+    public function updatePatientEmail(UpdatePatientEmailRequest $request): JsonResponse
+    {
+        try {
+            $data = $this->userServices->updatePatientEmail($request->validated());
+            return Response::success($data['user'], $data['message']);
+        } catch (Throwable $th) {
+            $message = $th->getMessage();
+            return Response::Error([], $message);
         }
     }
 }
