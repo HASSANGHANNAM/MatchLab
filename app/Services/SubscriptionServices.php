@@ -69,10 +69,12 @@ class SubscriptionServices
                 $lab = User::with('labOwner.lab')->findOrFail(Auth::id())->labOwner->lab;
                 $plan = Plan::find($request['plan_id']);
                 $user =  DB::table('users')->where('id', Auth::id())->first();
-                $superAdmin = DB::table('users')->where('email', "superAdmin@gmail.com")->first();
-                $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $superAdmin->stripe_account_id, $plan->price);
-                if ($payment['code'] != 200) {
-                    return ['message' => 'fail add plan subscription because ' . $payment['message'], 'user' => null];
+                if ($plan->price != 0) {
+                    $superAdmin = DB::table('users')->where('email', "superAdmin@gmail.com")->first();
+                    $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $superAdmin->stripe_account_id, $plan->price);
+                    if ($payment['code'] != 200) {
+                        return ['message' => 'fail add plan subscription because ' . $payment['message'], 'user' => null];
+                    }
                 }
                 $startDate = now();
                 if ($lab->expiry_time && $lab->expiry_time < now()) {
@@ -85,7 +87,7 @@ class SubscriptionServices
                     [
                         ['id', '=', $lab->id],
                     ]
-                )->update(['expiry_time' =>   $newExpiry]);
+                )->update(['expiry_time' =>   $newExpiry, 'subscriptions_status' =>   1]);
                 $message = 'successfully!';
             } else {
                 $message = 'Unauthorized access!';

@@ -19,24 +19,22 @@ class updateLabOwner extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-public function rules(): array
-{
-    $userId = auth()->id(); // المستخدم الحالي
-    $labOwnerId = auth()->user()->LabOwner->lab->id ?? null;
-
-    return [
-        'first_name'    => 'required|string|min:4',
-        'last_name'     => 'required|string|min:4',
-        'email'         => 'required|email|unique:users,email,' . $userId,
-        'password'      => 'nullable|string|min:8|confirmed', // يمكن تركه فارغ إذا لم يغير
-        'lab_name'      => 'required|string',
-        'contact_info'  => 'required|string',
-        'city_id'       => 'required|exists:cities,id',
-        'fcm_token'     => 'nullable|string',
-        // 'latitude'      => 'required|numeric',
-        // 'longitude'     => 'required|numeric',
-        'address'       => 'required|string',
-        'image'         => 'nullable|image|mimes:jpeg,png,jpg' // يمكن عدم رفع صورة جديدة
-    ];
-}
+    public function rules(): array
+    {
+        $userId = auth()->id(); // المستخدم الحالي
+        $labOwnerId = auth()->user()->LabOwner->lab->id ?? null;
+        return [
+            'first_name'    => 'nullable|string|min:4',
+            'last_name'     => 'nullable|string|min:4',
+            'password'      => 'nullable|string|min:8',
+            'lab_name'      => 'nullable|string',
+            'contact_info'  => 'nullable|string',
+            'city_id'       => 'nullable|exists:cities,id',
+            'address'       => 'nullable|string',
+            'image'         => 'nullable|image|mimes:jpeg,png,jpg',
+            'latitude'      => 'nullable|numeric',
+            'longitude'     => 'nullable|numeric',
+            'home_service'     => 'nullable|boolean'
+        ];
+    }
 }

@@ -185,12 +185,12 @@ class UserServices
                 }
 
                 if ($user->email_verified_at === null) {
-                return [
-                    'user' => null,
-                    'message' => 'يجب تفعيل البريد الإلكتروني الجديد قبل تسجيل الدخول.',
-                    'code' => 403
-                ];
-            }
+                    return [
+                        'user' => null,
+                        'message' => 'يجب تفعيل البريد الإلكتروني الجديد قبل تسجيل الدخول.',
+                        'code' => 403
+                    ];
+                }
 
 
                 $user = $this->appendRolesAndPermissions($user);
@@ -246,19 +246,8 @@ class UserServices
             $user->update([
                 'first_name' => $request['first_name'] ?? $user->first_name,
                 'last_name'  => $request['last_name'] ?? $user->last_name,
-                'email'      => $newEmail,
-                'password'   => isset($request['password']) ? Hash::make($request['password']) : $user->password,
                 'fcm_token'  => $request['fcm_token'] ?? $user->fcm_token,
             ]);
-
-            // ✅ إذا غيّر الإيميل نطلب إعادة التحقق
-            if ($oldEmail !== $newEmail) {
-                $user->email_verified_at = null;
-                $user->save();
-
-                // إرسال إشعار التحقق
-               $this->sendVerificationCode($user);
-            }
 
             $user->patient()->update([
                 'phone'           => $request['phone'] ?? $user->patient->phone,
@@ -274,9 +263,7 @@ class UserServices
                 "تم تحديث معلومات حسابك كمريض بنجاح."
             );
 
-            $message = $oldEmail !== $newEmail
-                ? 'تم تحديث البيانات، يرجى تفعيل البريد الإلكتروني الجديد.'
-                : 'Patient information updated successfully!';
+            $message = 'Patient information updated successfully!';
 
             return ['user' => $user, 'message' => $message, 'code' => 200];
         });
@@ -286,14 +273,10 @@ class UserServices
     {
         return DB::transaction(function () use ($request) {
             $user = auth()->user();
-
             $user->update([
                 'first_name' => $request['first_name'] ?? $user->first_name,
                 'last_name' => $request['last_name'] ?? $user->last_name,
-                'email' => $request['email'] ?? $user->email,
                 'password' => isset($request['password']) ? Hash::make($request['password']) : $user->password,
-                'fcm_token' => $request['fcm_token'] ?? $user->fcm_token,
-
             ]);
 
             $labOwner = $user->LabOwner;
@@ -302,13 +285,12 @@ class UserServices
             $lab->update([
                 'lab_name' => $request['lab_name'] ?? $lab->lab_name,
                 'contact_info' => $request['contact_info'] ?? $lab->contact_info,
-                'price_of_global_unit' => $request['price_of_global_unit'] ?? $lab->price_of_global_unit,
-                'subscriptions_status' => $request['subscriptions_status'] ?? $lab->subscriptions_status,
                 'home_service' => $request['home_service'] ?? $lab->home_service,
             ]);
-
             $lab->location()->update([
                 'address' => $request['address'] ?? $lab->location->address,
+                'latitude' => $request['latitude'] ?? $lab->location->latitude,
+                'longitude' => $request['longitude'] ?? $lab->location->longitude,
                 'city_id' => $request['city_id'] ?? $lab->location->city_id,
             ]);
 
@@ -326,10 +308,11 @@ class UserServices
                 "تحديث بيانات المختبر",
                 "تم تحديث معلومات المختبر الخاصة بك بنجاح."
             );
-
+            $user->save();
+            $lab->save();
             $message = 'Lab Owner information updated successfully!';
             $code = 200;
-            return ['user' => $user, 'message' => $message, 'code' => $code];
+            return ['user' => null, 'message' => $message, 'code' => $code];
         });
     }
     public function getOwnerLabInfo(): array
@@ -365,12 +348,43 @@ class UserServices
                     'home_service'        => $lab->home_service ?? null,
                     'location' => [
                         'address' => $lab->location->address ?? null,
-                        'city'    => $lab->location->city->name ?? null,
+                        'city'    => $lab->location->city->city_name ?? null,
                     ],
                 ]
             ];
 
             $message = 'OwnerLab data retrieved successfully!';
+            return ['data' => $data, 'message' => $message];
+        });
+    }
+    public function getPatientInfo(): array
+    {
+        return DB::transaction(function () {
+
+            $user = auth()->user();
+            $user->load([
+                'patient'
+            ]);
+            if (!$user->patient) {
+                throw new \Exception('هذا المستخدم ليس صاحب مختبر.');
+            }
+
+            $data = [
+                'patient' => [
+                    'user_id'         => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name'  => $user->last_name,
+                    'email'      => $user->email,
+                    'fcm_token'      => $user->fcm_token,
+                    'patient_id'         => $user->patient->id ?? null,
+                    'phone'         => $user->patient->phone ?? null,
+                    'gender'         => $user->patient->gender ?? null,
+                    'dob'         => $user->patient->dob ?? null,
+                    'Health_Problems'         => $user->patient->Health_Problems ?? null
+                ]
+            ];
+
+            $message = 'Patient data retrieved successfully!';
             return ['data' => $data, 'message' => $message];
         });
     }
@@ -468,5 +482,58 @@ class UserServices
         });
 
         return 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني';
+    }
+
+
+    public function updatePatientPassword($request): array
+    {
+        return DB::transaction(function () use ($request) {
+            $user = auth()->user();
+            // dd(!Hash::check($request['old_password'], auth()->user()->password));
+            if (!Hash::check($request['old_password'], auth()->user()->password)) {
+                $user->update([
+                    'password'   =>  Hash::make($request['old_password']),
+                ]);
+                $notificationService = new NotificationService();
+                $notificationService->send(
+                    $user,
+                    "تحديث كلمة المرور",
+                    "تم تحديث كلمة مرور حسابك كمريض بنجاح."
+                );
+                $message = 'success update password';
+            } else {
+                $message = 'fail update password the old password incorrect';
+            }
+            return ['user' => null, 'message' => $message, 'code' => 200];
+        });
+    }
+    public function updatePatientEmail($request): array
+    {
+        return DB::transaction(function () use ($request) {
+            $user = auth()->user();
+
+            $oldEmail = $user->email;
+            $newEmail = $request['email'] ?? $oldEmail;
+
+            $user->update([
+                'email'      => $newEmail
+            ]);
+
+            $user->email_verified_at = null;
+            $user->save();
+            $this->sendVerificationCode($user);
+
+
+            $notificationService = new NotificationService();
+            $notificationService->send(
+                $user,
+                "تحديث ايميل ",
+                "تم تحديث إيميل حسابك كمريض بنجاح."
+            );
+
+            $message = 'your email updated successfully! you must verfid it';
+
+            return ['user' => $user, 'message' => $message, 'code' => 200];
+        });
     }
 }

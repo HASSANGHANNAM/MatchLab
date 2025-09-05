@@ -26,6 +26,8 @@ class updateAppointmentRequest extends FormRequest
             'patient_name' => 'string|max:255',
             'patient_phone' => 'string|max:20',
             'patient_id_number' => 'string|max:50',
+            'longitude' => '',
+            'latitude' => '',
             'lab_id' => 'integer|exists:labs,id',
             'location_id' => 'nullable|integer|exists:locations,id',
             'date_time' => 'date_format:Y-m-d H:i:s',

@@ -238,12 +238,12 @@ class AnalysesServices
                     ['lab_id', '=', $labId]
                 ]
             )->delete();
-                $notificationService = new NotificationService();
-                $notificationService->send(
-                    Auth::user(),
-                    "حذف التحليل ",
-                    "تم حذف التحليل بنجاح "
-                );
+            $notificationService = new NotificationService();
+            $notificationService->send(
+                Auth::user(),
+                "حذف التحليل ",
+                "تم حذف التحليل بنجاح "
+            );
             $message = "Success delete Analys from your lab";
             $code = 200;
         } else {
