@@ -58,7 +58,7 @@ class LabSchedulController extends Controller
     {
         try {
             $appointment = $this->appointmentServices->bookAppointment($request->validated());
-            return Response::success($appointment['user'], $appointment['message']);
+            return Response::success($appointment['user'], $appointment['message'],$appointment['code']);
         } catch (Throwable $th) {
             return Response::error([], $th->getMessage());
         }
@@ -95,7 +95,7 @@ class LabSchedulController extends Controller
             $appointmentId = (int) $appointmentId;
             $data = $this->appointmentServices->updateAppointment($appointmentId, $request->validated());
 
-            return Response::success($data['data'], $data['message']);
+            return Response::success($data['data'], $data['message'], $data['code']);
         } catch (Throwable $th) {
             return Response::error([], 'حدث خطأ غير متوقع: ' . $th->getMessage(), 500);
         }

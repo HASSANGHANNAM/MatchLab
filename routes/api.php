@@ -25,6 +25,8 @@ use App\Http\Middleware\VerifiedEmail;
 use App\Models\Advertisement;
 use Illuminate\Auth\Events\verified;
 
+
+
 Route::post('/registerPatient', [AuthController::class, 'registerPatient']);
 Route::post('/registerOwnerLab', [AuthController::class, 'registerOwnerLab']);
 Route::post('/verify-email', [AuthController::class, 'verifyEmail']);

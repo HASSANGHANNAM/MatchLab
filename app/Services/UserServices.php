@@ -162,7 +162,7 @@ class UserServices
             $notificationService->send(
                 $user,
                 "تم إنشاء حساب ادمن ",
-                "مرحباً {$user->first_name}، تم إنشاء حسابك كادمن بنجاح.",
+                "مرحباً {$user->first_name}، تم إنشاء حسابك كادمن بنجاح."
             );
 
 
@@ -200,11 +200,9 @@ class UserServices
                 $notificationService = new NotificationService();
                 $notificationService->send(
                     $user,
-                    "تم تسجيل دخولك",
-                    "مرحباً {$user->first_name}،",
-                    "wallet"
+                    "تم تسجيل دخولك ",
+                    "مرحباً {$user->first_name}،"
                 );
-
                 $message = 'User login successfully';
                 $code = 200;
             }

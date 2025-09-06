@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\addAnalysesToLabRequest;
+use App\Http\Requests\AddAnalysesToLabRequest;
 use App\Http\Requests\AnalysesSearchRequest;
 use Illuminate\Http\Request;
 use App\Http\Responses\Response;

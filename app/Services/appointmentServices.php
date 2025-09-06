@@ -104,7 +104,8 @@ class appointmentServices
         if (!Auth::user() || !Auth::user()->hasRole('Patient')) {
             return [
                 'message' => 'غير مصرح لك بحجز الموعد.',
-                'user' => null
+                'user' => null,
+                'code'=>422
             ];
         }
         return DB::transaction(function () use ($data) {
@@ -114,7 +115,8 @@ class appointmentServices
             if ($appointmentDateTime->lessThanOrEqualTo(Carbon::now())) {
                 return [
                     'message' => 'لا يمكن حجز موعد في وقت مضى.',
-                    'user' => null
+                    'user' => null,
+                    'code'=>422
                 ];
             }
             $dayOfWeek = $appointmentDateTime->format('l');
@@ -124,6 +126,14 @@ class appointmentServices
                 ->first();
             $data['patient_id'] = $patient->id;
             $lab = DB::table('labs')->where('id', $labId)->first();
+            if($lab->home_service==0&& $data['type']=="IN_HOME")
+            {
+                return [
+                    'message' => 'لا يمكن حجز موعد في المنزل لعدم دعمه بهذا المخبر.',
+                    'user' => null,
+                    'code'=>422
+                ]; 
+            }
             $workingHour = LabWorkingHour::where('lab_id', $labId)
                 ->where('day_of_week', $dayOfWeek)
                 ->where('start_time', '<=', $appointmentTime)
@@ -132,7 +142,9 @@ class appointmentServices
             if (!$workingHour) {
                 return [
                     'message' => 'هذا الوقت خارج أوقات عمل المختبر.',
-                    'user' => null
+                    'user' => null,
+                    'code'=>422
+
                 ];
             }
 
@@ -141,12 +153,13 @@ class appointmentServices
             $appointmentsCount = Appointment::where('lab_id', $labId)
                 ->whereBetween('date_time', [$startHour, $endHour])
                 ->count();
+                
             if ($appointmentsCount >= $workingHour->patients_per_hour) {
-                return ['message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.', 'user' => null];
+                return ['message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.', 'user' => null,'code'=>422];
             }
 
             if (empty($data['analyses']) || !is_array($data['analyses'])) {
-                return ['message' => 'يجب اختيار التحاليل المطلوبة.', 'user' => null];
+                return ['message' => 'يجب اختيار التحاليل المطلوبة.', 'user' => null,'code'=>422];
             }
             $price = 0;
             foreach ($data['analyses'] as $analysisId) {
@@ -154,7 +167,7 @@ class appointmentServices
                     ->where('lab_analys_id', $analysisId)
                     ->exists();
                 if (!$exists) {
-                    return ['message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر.", 'user' => null];
+                    return ['message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر.", 'user' => null,'code'=>422];
                 }
                 $analysis =  DB::table('lab_analyses')->where('id', $analysisId)->first();
                 $price += $analysis->global_price * $lab->price_of_global_unit;
@@ -168,7 +181,7 @@ class appointmentServices
                 ->first();
             $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $labUser->stripe_account_id, $price);
             if ($payment['code'] != 200) {
-                return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null];
+                return ['message' => 'fail appointment because ' . $payment['message'], 'user' => null,'code'=>422];
             }
             // end stripe
             $appointment = Appointment::create([
@@ -202,7 +215,7 @@ class appointmentServices
                 "موعدك بتاريخ {$appointment->date_time} في المختبر {$appointment->lab->name}"
             );
 
-            return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'lab.location')];
+            return ['message' => 'Appointment booked successfully!', 'user' => $appointment->load('lab', 'lab.location'),'code'=>200];
         });
     }
 
@@ -216,6 +229,7 @@ class appointmentServices
 
         $appointments = Appointment::with('patient')
             ->where('lab_id', $labId)
+            ->with('appointmentLabHaveAnalys.labAnalysis')
             ->orderBy('date_time', 'desc')
             ->get();
 
@@ -267,19 +281,20 @@ class appointmentServices
             return [
                 'status' => 0,
                 'data' => null,
-                'message' => 'لا يوجد سجل مريض مرتبط بهذا المستخدم.'
+                'message' => 'لا يوجد سجل مريض مرتبط بهذا المستخدم.',
+                'code'=>422
             ];
         }
 
         $appointment = Appointment::where('id', $appointmentId)
             ->where('patient_id', $patientId)
             ->first();
-
         if (!$appointment) {
             return [
                 'status' => 0,
                 'data' => null,
-                'message' => 'الموعد غير موجود.'
+                'message' => 'الموعد غير موجود.',
+                'code'=>422
             ];
         }
 
@@ -291,7 +306,8 @@ class appointmentServices
                 return [
                     'status' => 0,
                     'data' => null,
-                    'message' => 'لا يمكن حجز موعد بتاريخ مضى.'
+                    'message' => 'لا يمكن حجز موعد بتاريخ مضى.',
+                    'code'=>422
                 ];
             }
             if ($appointmentDateTime != null) {
@@ -308,7 +324,8 @@ class appointmentServices
                     return [
                         'status' => 0,
                         'data' => null,
-                        'message' => 'هذا الوقت خارج أوقات عمل المختبر.'
+                        'message' => 'هذا الوقت خارج أوقات عمل المختبر.',
+                        'code'=>422
                     ];
                 }
                 $startHour = $appointmentDateTime->copy()->startOfHour();
@@ -322,7 +339,8 @@ class appointmentServices
                     return [
                         'status' => 0,
                         'data' => null,
-                        'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.'
+                        'message' => 'تم حجز العدد الأقصى من المرضى لهذه الساعة.',
+                        'code'=>422
                     ];
                 }
             } else {
@@ -339,14 +357,15 @@ class appointmentServices
                         return [
                             'status' => 0,
                             'data' => null,
-                            'message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر."
+                            'message' => "التحليل رقم {$analysisId} غير متوفر في هذا المختبر.",
+                            'code'=>422
                         ];
                     }
                     $analysis =  DB::table('lab_analyses')->where('id', $analysisId)->first();
+                    // dd($analysis->global_price * $lab->price_of_global_unit);
                     $price += $analysis->global_price * $lab->price_of_global_unit;
                 }
             }
-
             // start stripe
             $user =  DB::table('users')->where('id', Auth::id())->first();
             $labUser = DB::table('lab_owners')
@@ -357,11 +376,11 @@ class appointmentServices
             $pricenew = $price - $appointment->total_Price;
             if ($pricenew != 0) {
                 if ($pricenew < 0)
-                    $payment = $this->stripeService->transactionAmount($labUser->stripe_account_id, $user->stripe_account_id, $pricenew);
+                    $payment = $this->stripeService->transactionAmount($labUser->stripe_account_id, $user->stripe_account_id, abs($pricenew));
                 else
                     $payment = $this->stripeService->transactionAmount($user->stripe_account_id, $labUser->stripe_account_id, $pricenew);
                 if ($payment['code'] != 200) {
-                    return ['message' => 'fail appointment because ' . $payment['message'], 'data' => null];
+                    return ['message' => 'fail appointment because ' . $payment['message'], 'data' => null, 'code'=>422];
                 }
             }
 
@@ -375,7 +394,7 @@ class appointmentServices
                 'longitude' => $data['longitude'] ??  $appointment->longitude,
                 'latitude' => $data['latitude'] ??  $appointment->latitude,
                 'lab_id' => $labId,
-                'total_Price' => $pricenew,
+                'total_Price' =>$price,
                 'location_id' => $data['location_id'] ?? $appointment->location_id,
                 'date_time' => $appointmentDateTime,
             ]);
@@ -409,7 +428,8 @@ class appointmentServices
             return [
                 'status' => 1,
                 'data' => $appointment->load('lab', 'lab.location'),
-                'message' => 'تم تحديث الموعد بنجاح!'
+                'message' => 'تم تحديث الموعد بنجاح!',
+                'code'=>200
             ];
         });
     }

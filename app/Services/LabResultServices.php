@@ -41,7 +41,7 @@ class LabResultServices
                 $this->notificationService->send(
                     $user,
                     'نتائج التحليل جاهزة',
-                    "تم إدخال نتائج تحاليلك للحجز رقم {$appointment->id}.",
+                    "تم إدخال نتائج تحاليلك للحجز رقم {$appointment->id}.النتيجة هي .{$data['result']}",
                     'lab_result'
                 );
             }
