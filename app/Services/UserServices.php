@@ -499,10 +499,12 @@ class UserServices
                     "تم تحديث كلمة مرور حسابك كمريض بنجاح."
                 );
                 $message = 'success update password';
+                $code = 200;
             } else {
                 $message = 'fail update password the old password incorrect';
+                $code = 422;
             }
-            return ['user' => null, 'message' => $message, 'code' => 200];
+            return ['user' => null, 'message' => $message, 'code' => $code];
         });
     }
     public function updatePatientEmail($request): array

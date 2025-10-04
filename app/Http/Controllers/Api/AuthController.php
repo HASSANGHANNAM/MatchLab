@@ -173,7 +173,7 @@ class AuthController extends Controller
     {
         try {
             $data = $this->userServices->updatePatientPassword($request->validated());
-            return Response::success($data['user'], $data['message']);
+            return Response::success($data['user'], $data['message'], $data['code']);
         } catch (Throwable $th) {
             $message = $th->getMessage();
             return Response::Error([], $message);
